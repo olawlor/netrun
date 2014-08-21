@@ -277,8 +277,8 @@ if ($file) {  # "file" mode: Loading up a saved input file
 
 if ($q->param('code')) {  # Has code already:
 	if (!$q->param('foo_ret')) { # No explicit return type yet: set it
-		$q->param('foo_ret')='int'; # default to int, for pre-2014-08 backward compat
-		$q->param('foo_arg0')='void'; # default
+		$q->param('foo_ret','int'); # default to int, for pre-2014-08 backward compat
+		$q->param('foo_arg0','void'); # default
 	}
 }
 
