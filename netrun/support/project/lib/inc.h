@@ -30,7 +30,10 @@ inline void *netrun_allocate_mystery_size(void) {
 /**
  Function prototype for user-written subroutine "foo" (C, C++, Fortran77, or Assembly) 
 */
-CDECL int foo(void);
+#ifndef NETRUN_FOO_DECL
+#define NETRUN_FOO_DECL    CDECL int foo(void)
+#endif
+NETRUN_FOODECL;
 
 /**
   Read one input integer from the user. 
