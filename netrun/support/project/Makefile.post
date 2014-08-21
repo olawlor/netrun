@@ -29,6 +29,9 @@ netrun/obj: $(USER_CODE)
 	@netrun/run.sh "Compile" "$(USER_CODE)" \
 		$(COMPILER) -c $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
+main.obj:
+	@$(LINKER) $(LFLAGS) lib/main.cpp -c -o $@
+
 netrun/link: $(LINKWITH) netrun/obj $(NR_DEP) 
 	@netrun/run.sh "Link" "$(USER_CODE)" \
 		$(LINKER) $(USER_OBJ) $(LFLAGS) $(CFLAGS) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
@@ -113,6 +116,4 @@ netrun/all: $(NETRUN)
 sandrun: netrun/all
 	@[ ! -r run/out.ppm ] || make -s netrun/image
 
-main.obj:
-	@ ( [ -r ../../../main.obj ] && cp ../../../main.obj . ) || $(LINKER) $(LFLAGS) lib/main.cpp -c -o $@
 
