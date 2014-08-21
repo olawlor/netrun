@@ -33,11 +33,11 @@ main.obj:
 	time $(LINKER) $(LFLAGS) $(CFLAGS) -O0 -c lib/main.cpp -o $@
 
 netrun/link: $(LINKWITH) netrun/obj $(NR_DEP) 
-	@netrun/run.sh "Link" "$(USER_CODE)" \
+	time @netrun/run.sh "Link" "$(USER_CODE)" \
 		$(LINKER) $(USER_OBJ) $(LFLAGS) $(CFLAGS) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
 
 netrun/run: netrun/link $(PROGRAM)
-	-@netrun/run.sh "Run" "$(USER_CODE)" \
+	time -@netrun/run.sh "Run" "$(USER_CODE)" \
 		$(SAFERUN) ./$(PROGRAM) $(INPUT)
 
 netrun/grade: netrun/link $(PROGRAM)
