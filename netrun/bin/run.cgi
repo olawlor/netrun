@@ -244,7 +244,9 @@ if ($rel_url eq "runa") { # ABET printing
 }
 
 
-print $q->start_form(-action=>$script_url);  # Always works, but not bookmarkable
+print $q->start_form(-action=>$script_url,-autocomplete=>"off"); 
+# autoComplete (e.g., LastPass) overwrites your new code with old code.
+# POST-style always works, but not bookmarkable.
 # print $q->start_form("GET"); # Bookmarkable, but doesn't work for long code...
 
 
@@ -823,7 +825,7 @@ sub create_project_directory {
 	my $srcadd=""; # Stuff to link with the user's code
 	my $toolpre=""; # Path to compiler & disassembler (& compiler prefix)
 	my $compiler=""; # Name of tool used to create output
-	my @cflags=("-c"); # Flags passed to compiler
+	my @cflags=(); # Flags passed to compiler
 	my $linker="g++"; # Used to link output
 	my @lflags=(); # Linker flags
 	my $disassembler="objdump -drC -M intel"; # Disassembler
