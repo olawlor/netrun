@@ -33,7 +33,7 @@ inline void *netrun_allocate_mystery_size(void) {
 #ifndef NETRUN_FOO_DECL
 #define NETRUN_FOO_DECL    CDECL int foo(void)
 #endif
-NETRUN_FOODECL;
+NETRUN_FOO_DECL;
 
 /**
   Read one input integer from the user. 
