@@ -275,6 +275,13 @@ if ($file) {  # "file" mode: Loading up a saved input file
 	load_file("saved/$file.sav");
 } 
 
+if ($q->param('code')) {  # Has code already:
+	if (!$q->param('foo_ret')) { # No explicit return type yet: set it
+		$q->param('foo_ret')='int'; # default to int, for pre-2014-08 backward compat
+		$q->param('foo_arg0')='void'; # default
+	}
+}
+
 # Return a checked, untainted homework field number, like 2006_CS301/HW1/1
 sub checkhwnum() {
 	my $hw=$q->param('hwnum');
@@ -407,8 +414,9 @@ if ($q->param()) {
 		&param_to_cgiarg('code').&param_to_cgiarg('lang').
 		&param_to_cgiarg('mach').&param_to_cgiarg('mode').
 		&param_to_cgiarg('input').&param_to_cgiarg('check_input').
-		&param_to_cgiarg('linkwith').&param_to_cgiarg('orun').
-		&param_to_cgiarg('ocompile');
+		&param_to_cgiarg('linkwith').
+		&param_to_cgiarg('foo_ret').&param_to_cgiarg('foo_arg0').
+		&param_to_cgiarg('orun'). &param_to_cgiarg('ocompile');
 	if ($rel_url eq "runt") { # Lecture-notes copy-and-pastable version
 		use HTML::Entities; # <- needed for printable HTML
 		print '<hr>Code as run:<pre>'.encode_entities($q->param('code')).'</pre><p><a href="',$url,'">(Try this in NetRun now!)</a>';
@@ -597,6 +605,16 @@ sub print_main_form {
 			},
 			-default=>['frag']),"\n";
 
+	print   "<p>Function: ",
+		$q->popup_menu(-name=>'foo_ret',
+			-values=>['void','long','int','double','float','std::string'],
+			-default=>['long']),
+		" foo(",
+		$q->popup_menu(-name=>'foo_arg0',
+			-values=>['void','long','int','double','float','std::string'],
+			-default=>['void']),
+		")\n";
+
 	print
 		"<p>Machine:",
 		$q->popup_menu(-name=>'mach',
@@ -757,6 +775,19 @@ sub untaint_name {
 	return $name;
 }
 
+## Untaint this C/C++ type name, and return it
+sub untaint_typename {
+	my $t=$q->param(shift);
+	
+	if ($t =~ /^(\w[\w:._<>]*)$/ ) {
+		$t = $1; # Untaint
+	} else {
+		my_security("Type name '$t' contains invalid characters");
+	}
+
+	return $t;
+}
+
 ########################### create_project_directory ############################
 ## Build a Makefile and surrounding stuff for this project
 sub create_project_directory {
@@ -835,7 +866,7 @@ sub create_project_directory {
 	my $saferun="netrun/safe_run.sh";
 	my $outflag="-o";
 	my $netrun="netrun/obj";
-	my $scriptrun='/home/netrun_scripting/chrootrun/chrootrun ';	
+	my $scriptrun='/home/netrun_scripting/chrootrun/chrootrun ';
 
 	# Prepare build subdirectory
 	system("rm","-fr","project");
@@ -844,6 +875,13 @@ sub create_project_directory {
 	if ($hwnum) {
 	# Is a homework-- try grading as well...
 		system("cp","class/$hwnum.grd","project/netrun/grade.sh");
+	}
+	
+	if ($q->param('foo_ret')) {
+		my $ret=untaint_typename('foo_ret');
+		my $arg0=untaint_typename('foo_arg0');
+		my $proto="$ret foo($arg0)";
+		push(@cflags,"-DNETRUN_FOO_DECL='".$proto."'");
 	}
 
 	if ($mode eq 'main') { $main=""; } # User will write main routine
