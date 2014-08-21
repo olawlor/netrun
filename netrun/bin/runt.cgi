@@ -946,7 +946,7 @@ using namespace std; /* ONLY for 202 examples... */
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre=$srcpre . $proto . " {\n";
 			$srcpost="\n;";
-			if ($ret!="void") { $srcpost .= "\n  return 0;"; }
+			if ($ret ne "void") { $srcpost .= "\n  return 0;"; }
 			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
