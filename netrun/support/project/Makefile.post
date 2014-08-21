@@ -30,7 +30,7 @@ netrun/obj: $(USER_CODE)
 		$(COMPILER) -c $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
 main.obj:
-	time $(LINKER) $(LFLAGS) $(CFLAGS) -c lib/main.cpp -o $@
+	time $(LINKER) $(LFLAGS) $(CFLAGS) -O0 -c lib/main.cpp -o $@
 
 netrun/link: $(LINKWITH) netrun/obj $(NR_DEP) 
 	@netrun/run.sh "Link" "$(USER_CODE)" \
