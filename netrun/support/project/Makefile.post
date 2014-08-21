@@ -9,10 +9,10 @@ NR=$(MAIN)
 all: $(PROGRAM)
 
 $(PROGRAM): $(LINKWITH) $(USER_OBJ) $(NR_DEP)
-	$(LINKER) $(LFLAGS) $(USER_OBJ) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
+	$(LINKER) $(LFLAGS) $(CFLAGS) $(USER_OBJ) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
 
 $(USER_OBJ): $(USER_CODE)
-	$(COMPILER) $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
+	$(COMPILER) -c $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
 test: $(PROGRAM)
 	./$(PROGRAM) $(INPUT)
@@ -27,11 +27,11 @@ clean:
 ################## Web output (netrun) support
 netrun/obj: $(USER_CODE)
 	@netrun/run.sh "Compile" "$(USER_CODE)" \
-		$(COMPILER) $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
+		$(COMPILER) -c $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
 netrun/link: $(LINKWITH) netrun/obj $(NR_DEP) 
 	@netrun/run.sh "Link" "$(USER_CODE)" \
-		$(LINKER) $(USER_OBJ) $(LFLAGS) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
+		$(LINKER) $(USER_OBJ) $(LFLAGS) $(CFLAGS) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
 
 netrun/run: netrun/link $(PROGRAM)
 	-@netrun/run.sh "Run" "$(USER_CODE)" \

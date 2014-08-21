@@ -6,7 +6,7 @@
 NAME=code
 USER_CODE=$(NAME).cpp
 COMPILER=g++
-CFLAGS=-c -O -Wall -fomit-frame-pointer -msse3
+CFLAGS=-O -Wall -fomit-frame-pointer -msse3
 LINKER=g++
 LFLAGS=-DTIME_FOO=1
 DISASSEMBLER=objdump -drC -M intel
