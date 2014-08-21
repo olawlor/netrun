@@ -1,0 +1,118 @@
+# Makefile fragment: meant to be included by main Makefile
+#  after defining some variables.
+
+USER_OBJ=$(NAME).obj
+PROGRAM=$(NAME).exe
+NR_DEP=$(MAIN) lib/inc.h lib/inc.c lib/signals.c
+NR=$(MAIN) 
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(LINKWITH) $(USER_OBJ) $(NR_DEP)
+	$(LINKER) $(LFLAGS) $(USER_OBJ) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
+
+$(USER_OBJ): $(USER_CODE)
+	$(COMPILER) $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
+
+test: $(PROGRAM)
+	./$(PROGRAM) $(INPUT)
+
+# Disassembly
+dis: $(USER_OBJ)
+	$(DISASSEMBLER) $(USER_OBJ)
+
+clean:
+	- rm $(PROGRAM) $(USER_OBJ) out
+
+################## Web output (netrun) support
+netrun/obj: $(USER_CODE)
+	@netrun/run.sh "Compile" "$(USER_CODE)" \
+		$(COMPILER) $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
+
+netrun/link: $(LINKWITH) netrun/obj $(NR_DEP) 
+	@netrun/run.sh "Link" "$(USER_CODE)" \
+		$(LINKER) $(USER_OBJ) $(LFLAGS) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
+
+netrun/run: netrun/link $(PROGRAM)
+	-@netrun/run.sh "Run" "$(USER_CODE)" \
+		$(SAFERUN) ./$(PROGRAM) $(INPUT)
+
+netrun/grade: netrun/link $(PROGRAM)
+	@- HWNUM=$(HWNUM) student=$(STUDENT) netrun/run_if_exists.sh \
+		netrun/grade.sh $(SAFERUN) ./$(PROGRAM)
+
+netrun/profile: netrun/link $(USER_OBJ)
+	@echo "<hr><h2>Profile</h2>"
+	@netrun/run.sh "Profile" "" \
+		gprof $(PROGRAM) run/gmon.out
+
+netrun/dis: netrun/obj $(USER_OBJ)
+	@echo "<hr><h2>Disassemble</h2>"
+	@netrun/run.sh "Disassemble" "" \
+		$(DISASSEMBLER) $(USER_OBJ)
+
+out.jpg:
+	@convert -quality 95 run/out.ppm out.jpg
+
+netrun/image: out.jpg
+	@echo '<img src="run?imgdisp=1&reload_stupid_browser='`date +"%H%M%S%N"`'">'
+	@echo '<&@SNIP@&>'
+	@cat out.jpg
+
+netrun/glfp: $(USER_CODE)
+	@cp $(USER_CODE) fragment.txt
+	@ln -s /tmp/glfp/vertex.txt .
+	@ln -s /tmp/glfp/src .
+	@ln -s /tmp/glfp/main .
+	@./main | netrun/filter_htmlpre.pl
+	@mkdir run; mv out.ppm run/
+	@make -s netrun/image
+
+netrun/glsl: $(USER_CODE)
+	@cp $(USER_CODE) fragment.txt
+	@ln -s /tmp/glsl/vertex.txt .
+	@ln -s /tmp/glsl/src .
+	@ln -s /tmp/glsl/main .
+	@./main | netrun/filter_htmlpre.pl
+	@mkdir run; mv out.ppm run/
+	@make -s netrun/image
+
+netrun/python: $(USER_CODE)
+	@mkdir run; cp $(USER_CODE) run/py
+	-@netrun/run.sh "Run" "$(USER_CODE)" \
+	    netrun/safe_run.sh /root.netrun/pyrun py $(INPUT)
+
+scriptrun=/home/netrun_scripting/chrootdir/home/run
+netrun/scripting: $(USER_CODE)
+	@rm -fr $(scriptrun); mkdir $(scriptrun); chmod 777 $(scriptrun)
+	@ln -s $(scriptrun) run; cp $(USER_CODE) run/
+	@-netrun/run.sh "Run" "$(USER_CODE)" $(SAFERUN) $(USER_CODE)
+	@- HWNUM=$(HWNUM) student=$(STUDENT) netrun/run_if_exists.sh \
+		netrun/grade.sh $(SAFERUN) $(USER_CODE)
+
+netrun/spice: $(USER_CODE)
+	@netrun/run.sh "Simulator" "$(USER_CODE)" spiceplot $(USER_CODE) out.jpg
+	@- HWNUM=$(HWNUM) student=$(STUDENT) netrun/run_if_exists.sh \
+		netrun/grade.sh $(SAFERUN) ./$(PROGRAM)
+	@make -s netrun/image
+
+netrun/vhdl: $(USER_CODE)
+	@mv $(USER_CODE) foo.vhdl
+	@netrun/run.sh "VHDL" "foo.vhdl" vhdlrun foo.vhdl $(INPUT)
+	@- HWNUM=$(HWNUM) student=$(STUDENT) netrun/run_if_exists.sh \
+		netrun/grade.sh netrun/safe_run.sh ./foo
+
+netrun/pic: $(USER_CODE)
+	@mkdir run; cp code.c run/
+	@cd run; /netrunpic/code/grade.sh
+	@make -s netrun/image
+	
+
+netrun/all: $(NETRUN)
+
+sandrun: netrun/all
+	@[ ! -r run/out.ppm ] || make -s netrun/image
+
+main.obj:
+	@ ( [ -r ../../../main.obj ] && cp ../../../main.obj . ) || $(LINKER) $(LFLAGS) lib/main.cpp -c -o $@
+

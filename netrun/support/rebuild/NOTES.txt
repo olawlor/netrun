@@ -1,0 +1,9 @@
+This directory is for rebuilding the cached "main.obj" when you change:
+	- support/project/lib/main.c
+	- support/project/lib/inc.h
+	- support/project/lib/inc.c
+	- support/project/lib/signal.c
+
+To use it, just run rebuild.sh, which will build a tarfile from 
+the softlinks in support/, and sandsend it off to the servers.
+

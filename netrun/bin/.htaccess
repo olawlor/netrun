@@ -1,0 +1,10 @@
+<FilesMatch [cr][ru][an][a-z]*.cgi >
+<Limit GET POST>
+AuthName "UAF CS: NetRun Application"
+AuthType Basic
+AuthUserFile /srv/netrun/.htpasswd
+require valid-user
+</Limit>
+</FilesMatch>
+#    "401 Authorization Required" document.
+ErrorDocument  401  /netrun/authfail.html
