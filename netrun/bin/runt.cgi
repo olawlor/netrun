@@ -877,10 +877,13 @@ sub create_project_directory {
 		system("cp","class/$hwnum.grd","project/netrun/grade.sh");
 	}
 	
+	my $ret="int";
+	my $arg0="void";
+	my $proto="int foo(void)";
 	if ($q->param('foo_ret')) {
-		my $ret=untaint_typename('foo_ret');
-		my $arg0=untaint_typename('foo_arg0');
-		my $proto="$ret foo($arg0)";
+		$ret=untaint_typename('foo_ret');
+		$arg0=untaint_typename('foo_arg0');
+		$proto="$ret foo($arg0)";
 		push(@cflags,"-DNETRUN_FOO_DECL='".$proto."'");
 	}
 
@@ -941,8 +944,10 @@ using namespace std; /* ONLY for 202 examples... */
 			$srcpre=$gradecode;
 		}
 		if ($mode eq 'frag') { # Subroutine fragment
-			$srcpre=$srcpre . "int foo(void) {\n";
-			$srcpost="\n;\n  return 0;\n}\n" . $gradepost;
+			$srcpre=$srcpre . $proto . " {\n";
+			$srcpost="\n;";
+			if ($ret!="void") { $srcpost .= "\n  return 0;"; }
+			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
 	elsif ( $lang eq "C") { ############# C
