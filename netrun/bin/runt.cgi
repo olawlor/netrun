@@ -890,6 +890,7 @@ sub create_project_directory {
 	my $sr_host="";  # Network target for build (needed outside)
 	my $sr_port="2983";
 	my $saferun="netrun/safe_run.sh";
+	my $srcflag="-c";
 	my $outflag="-o";
 	my $netrun="netrun/obj";
 	my $scriptrun='/home/netrun_scripting/chrootrun/chrootrun ';
@@ -1020,11 +1021,12 @@ using namespace std; /* ONLY for 202 examples... */
 	elsif ( $lang eq "Prolog") { 
 		$compiler="gplc";
 		$linker="gplc";
-		@cflags=("-c");
+		@cflags=();
 		@lflags=();
 		$srcext="pl";
 		$srcpre="";
 		$srcpost="";
+		$srcflag="-c";
 		$main=""; # Disable main
 	}
 	elsif ( $lang eq "Assembly") { ################# GNU Assembly
@@ -1041,7 +1043,8 @@ using namespace std; /* ONLY for 202 examples... */
 			$srcpre .="\nfoo:\n";
 			$srcpost=$gradepost . "\nret";
 		}
-		@cflags=(); # Get rid of (C-specific) flags
+		$srcflag="";
+		# @cflags=(); # Get rid of (C-specific) flags
 	}
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
 		$compiler="nasm";
@@ -1057,7 +1060,7 @@ global foo
 			$srcpre .=$gradecode;
 			$srcpost.=$gradepost;
 		}
-		@cflags=("-f","elf32"); # Get rid of (C-specific) flags, add nasm flags
+		$srcflag="-f elf32 ";
 	}
 	elsif ( $lang eq "MPI") {
 		$sr_host="powerwall0";
@@ -1080,9 +1083,9 @@ global foo
 		$srcext='cu';
 		$compiler='/usr/local/cuda/bin/nvcc   -keep --opencc-options -LIST:source=on   ';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
-		$compiler="$compiler -c";
 		$disassembler="cat code.ptx; echo ";
-		@cflags=();
+		# @cflags=();
+		$srcflag="-c"
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
@@ -1306,10 +1309,10 @@ const int program[]={';
 		
 	} elsif ( $mach eq "win32") {
 	print "WARNING-- Win32 machine is emulated with QEMU, and may be slow (half a minute!)<br>\n";
-		@cflags=("/c","/EHsc","/DWIN32=1");
-		@lflags=("/EHsc","/DWIN32=1");
+		@cflags=("/EHsc","/DWIN32=1");
 		if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"/O2");}
 		if (grep(/^Time$/, @orun)==1) {push(@lflags,"/DTIME_FOO=1");}
+		$srcflag="/c";
 		$outflag="/o";
 		# Run under WINE (slow, dangerous...)
 		# $compiler=$linker="'/dos/Program Files/OrionDev/bin/cl.exe'";
@@ -1476,6 +1479,7 @@ MAIN=$main
 HWNUM=$hwnum
 STUDENT=$user
 SAFERUN=$saferun
+SRCFLAG=$srcflag
 OUTFLAG=$outflag
 LINKWITH=$linkwith_targets
 

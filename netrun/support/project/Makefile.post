@@ -12,7 +12,7 @@ $(PROGRAM): $(LINKWITH) $(USER_OBJ) $(NR_DEP)
 	$(LINKER) $(LFLAGS) $(CFLAGS) $(USER_OBJ) $(LINKWITH) $(NR) $(OUTFLAG) $(PROGRAM)
 
 $(USER_OBJ): $(USER_CODE)
-	$(COMPILER) -c $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
+	$(COMPILER) $(CFLAGS) $(SRCFLAG) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
 test: $(PROGRAM)
 	./$(PROGRAM) $(INPUT)
@@ -27,7 +27,7 @@ clean:
 ################## Web output (netrun) support
 netrun/obj: $(USER_CODE)
 	@ netrun/run.sh "Compile" "$(USER_CODE)" \
-		$(COMPILER) -c $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
+		$(COMPILER) $(SRCFLAG) $(CFLAGS) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
 main.obj:
 	@ $(LINKER) $(LFLAGS) $(CFLAGS) -O0 -c lib/main.cpp -o $@
