@@ -1085,7 +1085,7 @@ global foo
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();
-		$srcflag="-c"
+		$srcflag="-c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
