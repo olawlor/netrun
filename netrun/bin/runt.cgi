@@ -753,7 +753,7 @@ sub compile_and_run {
 		system("cp","$proj->{src}","hw/$hw_und");
 		
 		
-		print '<p>Feel free to discuss the issues in this homework here:
+		print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
     <div id="disqus_thread"></div>
     <script type="text/javascript">
         /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
