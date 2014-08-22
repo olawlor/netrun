@@ -1264,7 +1264,7 @@ const int program[]={';
 #	print "WARNING-- x64 machine is emulated with QEMU, and may be slow (10 seconds)<br>\n";
 #		$sr_host="localhost";
 #		$sr_port="9923";
-		if ( $lang eq "Assembly-NASM") { @cflags=("-f","elf64");}
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
 		$sr_host="viz1";
