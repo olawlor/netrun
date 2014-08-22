@@ -400,6 +400,32 @@ foreach my $class (reverse <$userdir/class/*>) {
 print "</ul>\n";
 
 
+if ($q->param('hwnum')) {
+# They're trying to solve a homework here.
+	my $hwnum=checkhwnum();
+	my $hw_und=slash_to_underscore($hwnum);
+	if ( -r "hw/$hw_und" ) {
+print '
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = "netrun"; // required: replace example with your forum shortname
+	var disqus_identifier = "'.$hwnum.'";
+        /* * * DO NOT EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
+            dsq.src = "//" + disqus_shortname + ".disqus.com/embed.js";
+            (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+';
+	}
+}
+ 
+
+
 print '<p><a href="help.html">NetRun Help</a> and <a href="examples.html">Examples</a>';
 
 if ($q->param('name')) {
@@ -684,15 +710,13 @@ sub print_main_form {
 	if (1) {
 		print "Announcements:
 	<UL>
+		<li>Disqus comments for homeworks after OK! (2014-08-22)
+		<li>foo can take or return long, string, etc.  (2014-08-20)
 		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
-		<li>Support today/ examples (2012-09-07)
-		<li>Experimental scripting languages (2012-03-23)
-		<li>Experimental PIC backend (2011-11-28)
-		<li>Added gcc 4.7 C++0x (2011-10-05)
 	</UL>
 	";
 	}
-	print "Version 2012-09-07";
+	print "Version 2014-08-22";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
