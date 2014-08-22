@@ -1229,14 +1229,14 @@ const int program[]={';
 	} elsif ($mach eq "sandy64") {
 	print "FYI-- This is a four-core Intel Sandy Bridge i5 2400.<br>\n";
 		$sr_host="sandy";
-		if ( $lang eq "Assembly-NASM") { @cflags=("-f","elf64");}
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker="g++ -fopenmp ";}
 	} elsif ($mach eq "phenom64") {
 	print "FYI-- This is a six-core AMD Phenom II.<br>\n";
 		$sr_host="phenom";
-		if ( $lang eq "Assembly-NASM") { @cflags=("-f","elf64");}
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse4a -m3dnow"); }
 		if ($lang eq "OpenMP") {$compiler=$linker="g++ -fopenmp ";}
