@@ -916,7 +916,7 @@ sub create_project_directory {
 
 	if ($mode eq 'main') { $main=""; } # User will write main routine
 
-	if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"-O");}
+	if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"-O1");}
 	if (grep(/^Debug$/, @ocompile)==1) {push(@cflags,"-g");}
 	if (grep(/^Warnings$/, @ocompile)==1) {push(@cflags,"-Wall");}
 	if (grep(/^Shared$/, @ocompile)==1) {push(@cflags,"-fPIC");}
