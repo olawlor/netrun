@@ -426,33 +426,6 @@ if ($q->param()) {
 	}
 }
 
-
-if ($q->param('hwnum')) {
-# They're trying to solve a homework here.
-	my $hwnum=checkhwnum();
-	my $hw_und=slash_to_underscore($hwnum);
-	if ( -r "hw/$hw_und" ) {
-print 'Feel free to discuss the issues in this homework here:
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-        var disqus_shortname = "netrun"; // required: replace example with your forum shortname
-	var disqus_identifier = "'.$hwnum.'";
-        /* * * DO NOT EDIT BELOW THIS LINE * * */
-        (function() {
-            var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
-            dsq.src = "//" + disqus_shortname + ".disqus.com/embed.js";
-            (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-';
-	}
-}
-
-
-
 print
 	$config::end_page;
 
@@ -778,6 +751,24 @@ sub compile_and_run {
 		my $hw_und=slash_to_underscore($hwnum);
 		journal("hwok $hw_und");
 		system("cp","$proj->{src}","hw/$hw_und");
+		
+		
+		print '<p>Feel free to discuss the issues in this homework here:
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = "netrun"; // required: replace example with your forum shortname
+	var disqus_identifier = "'.$hwnum.'";
+        /* * * DO NOT EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
+            dsq.src = "//" + disqus_shortname + ".disqus.com/embed.js";
+            (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+';
 	}
 }
 
