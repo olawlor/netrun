@@ -1047,7 +1047,7 @@ using namespace std; /* ONLY for 202 examples... */
 		# @cflags=(); # Get rid of (C-specific) flags
 	}
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
-		$compiler="nasm";
+		$compiler="nasm -f elf32 ";
 		$srcext="S";
 		$srcpre='
 section .text
@@ -1060,7 +1060,7 @@ global foo
 			$srcpre .=$gradecode;
 			$srcpost.=$gradepost;
 		}
-		$srcflag="-f elf32 ";
+		$srcflag="";
 	}
 	elsif ( $lang eq "MPI") {
 		$sr_host="powerwall0";
