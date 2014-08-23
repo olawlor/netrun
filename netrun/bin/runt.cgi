@@ -759,7 +759,7 @@ sub compile_and_run {
         /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
         var disqus_shortname = "netrun"; // required: replace example with your forum shortname
 	var disqus_identifier = "'.$hwnum.'";
-        /* * * DO NOT EDIT BELOW THIS LINE * * */
+	var disqus_url = "https://lawlor.cs.uaf.edu/netrun/run?hw='.$hwnum.'";
         (function() {
             var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
             dsq.src = "//" + disqus_shortname + ".disqus.com/embed.js";
