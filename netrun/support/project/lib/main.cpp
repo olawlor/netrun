@@ -62,7 +62,7 @@ bool netrun_data_readable(std::istream &is) {
 	
 	// Skip whitespace, while checking for EOF
 	while (true) {
-		int c=is.get()) { // read character
+		int c=is.get()); // read character
 		if (c==EOF) return false; // no data left
 		else if (c=='\r' || c=='\n' || c==' ' || c=='\t') continue;
 		else // a real character--throw it back and leave.
