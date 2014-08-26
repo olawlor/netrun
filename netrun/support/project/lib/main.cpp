@@ -61,11 +61,15 @@ bool netrun_data_readable(std::istream &is) {
 	if (is.tellg()==last_pos) return false; // didn't read any data last time
 	
 	// Skip whitespace, while checking for EOF
-	int c=EOF;
-	while (c=is.get()) { // read character
+	while (true) {
+		int c=is.get()) { // read character
 		if (c==EOF) return false; // no data left
-		if (c=='\r' || c=='\n' || c==' ' || c=='\t') continue;
-		else { is.putback((char)c);  break; }
+		else if (c=='\r' || c=='\n' || c==' ' || c=='\t') continue;
+		else // a real character--throw it back and leave.
+		{ 
+			is.putback((char)c);  
+			break; 
+		}
 	}
 	
 	last_pos=is.tellg(); // store position of real character
