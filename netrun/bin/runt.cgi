@@ -900,7 +900,8 @@ sub create_project_directory {
 	if ($q->param('foo_ret')) {
 		$ret=untaint_typename('foo_ret');
 		$arg0=untaint_typename('foo_arg0');
-		$proto="$ret foo($arg0)";
+		if ($arg0 ne "void") { $proto="$ret foo($arg0 bar)"; }
+		else { $proto="$ret foo($arg0)"; }
 		push(@cflags,"-DNETRUN_FOO_DECL='".$proto."'");
 	}
 
