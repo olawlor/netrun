@@ -54,7 +54,20 @@ void netrun_call( void (*foofn)() ) {
 	foofn();
 }
 
-
+/** This is designed to keep calling input-consuming code until EOF */
+bool netrun_data_readable(std::istream &is) {
+	static std::streampos last_pos=0u;
+	if (!is) return false; // EOF bit set
+	if (is.tellg()==last_pos) return false; // didn't read any data last time
+	int c=EOF;
+	while (c==is.get()) { // read character
+		if (c==EOF) return false; // no data left
+		if (c=='\r' || c=='\n' || c==' ' || c=='\t') continue;
+		else break;
+	}
+	last_pos=is.tellg();
+	return true; // data is readable
+}
 
 
 /* This junk is used to detect modifications to preserved registers: */
@@ -71,11 +84,15 @@ int main() {
 #endif
 
 /* Normal case */
-	netrun_call(&foo);
+	do {
+		netrun_call(&foo);
 
 	if (local!=0x1776) printf("ERROR! Main's stack space was overwritten!\n");
 	if (l0!=g0||l1!=g1||l2!=g2||l3!=g3||l4!=g4||l5!=g5||l6!=g6||l7!=g7) printf("ERROR! Main's local variables changed--\n"
 "Either some preserved registers were overwritten,\n"
 "or else part of the stack was changed or overwritten!\n");
+
+	} while (netrun_data_readable(std::cin));
+	
 	exit(0);
 }
