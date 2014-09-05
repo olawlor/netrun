@@ -275,13 +275,6 @@ if ($file) {  # "file" mode: Loading up a saved input file
 	load_file("saved/$file.sav");
 } 
 
-if ($q->param('code')) {  # Has code already:
-	if (!$q->param('foo_ret')) { # No explicit return type yet: set it
-		$q->param('foo_ret','int'); # default to int, for pre-2014-08 backward compat
-		$q->param('foo_arg0','void'); # default
-	}
-}
-
 # Return a checked, untainted homework field number, like 2006_CS301/HW1/1
 sub checkhwnum() {
 	my $hw=$q->param('hwnum');
@@ -320,6 +313,14 @@ previous attempt, which is still called '".saved_file_link($f)."'");
 	print("<br>");
 } 
 
+
+
+if ($q->param('code')) {  # Has code already:
+	if (!$q->param('foo_ret')) { # No explicit return type yet: set it
+		$q->param('foo_ret','int'); # default to int, for pre-2014-08 backward compat
+		$q->param('foo_arg0','void'); # default
+	}
+}
 
 
 
@@ -900,7 +901,8 @@ sub create_project_directory {
 	if ($q->param('foo_ret')) {
 		$ret=untaint_typename('foo_ret');
 		$arg0=untaint_typename('foo_arg0');
-		$proto="$ret foo($arg0)";
+		if ($arg0 ne "void") { $proto="$ret foo($arg0 bar)"; }
+		else { $proto="$ret foo($arg0)"; }
 		push(@cflags,"-DNETRUN_FOO_DECL='".$proto."'");
 	}
 
