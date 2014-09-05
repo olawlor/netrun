@@ -88,14 +88,14 @@ sub updatePassword {
 	print EMAIL "The NetRun password for $name is '$pw'.
 You should just copy-and-paste the password from this email
 to log in to NetRun here:
-	http://lawlor.cs.uaf.edu/netrun/run
+	https://lawlor.cs.uaf.edu/netrun/run
 
 If you're not using IE, and not worried about somebody stealing 
 your password from this machine, you can log in using this URL:
-	http://$name:$pw\@lawlor.cs.uaf.edu/netrun/run
+	https://$name:$pw\@lawlor.cs.uaf.edu/netrun/run
 
 To eventually reset your password use
-	http://lawlor.cs.uaf.edu/netrun/pwreset
+	https://lawlor.cs.uaf.edu/netrun/pwreset
 
 If you've never heard of NetRun, or you didn't request the 
 password to be reset, the following machine may be trying
