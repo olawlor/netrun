@@ -294,6 +294,8 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	} else {
 		my_security("Homework name '$hw' contains invalid characters");
 	}
+	my $reset=$q->param('reset');
+
 	print("Loading homework '$hw'\n");
 	load_file("class/$hw.sav");
 
@@ -302,12 +304,10 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 
 	my $name=$q->param('name');
 	if ( -r "saved/$name.sav" ) {
-	# Already have a saved homework with this name!  Rename the *new* one
-		my $f=$name;
-		$name=$name."_again";
-		$q->param('name',"$name");
-		print(", with bogus name '$name'.  I did not overwrite your 
-previous attempt, which is still called '".saved_file_link($f)."'");
+	# Already have a saved homework with this name!  Use it instead
+		if ("$reset" ne "1") {
+			load_file("saved/$name.sav");
+		}
 	}
 
 	print("<br>");
