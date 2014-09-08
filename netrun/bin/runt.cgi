@@ -307,6 +307,8 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	# Already have a saved homework with this name!  Use it instead
 		if ("$reset" ne "1") {
 			load_file("saved/$name.sav");
+		} else { # Reset to factory defaults
+			print("<p>Clean reset to original instructor's starting code.");
 		}
 	}
 
@@ -677,6 +679,10 @@ sub print_main_form {
 	print '<p>Link with: ',
 		$q->textfield(-name=>"linkwith");
 
+	if ($q->param('hwnum')) { # add reset link
+		print '<p><a href="?hw='.$q->param('hwnum').'&reset=1">Clean reset</a> this homework problem (discards your work)';
+	}
+
 	if ($q->param('lang') eq "MPI") {
 		print '<p>MPI Processes (1-20): ',
 			$q->textfield(-name=>"numprocs");
@@ -692,7 +698,7 @@ sub print_main_form {
 	</UL>
 	";
 	}
-	print "Version 2014-08-22";
+	print "Version 2014-09-07";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -1396,8 +1402,8 @@ const int program[]={';
 	# Write all their parameters to a .sav file
 	my_mkdir("saved");
 	open(SFILE,">$userdir/saved/$orig_name.sav") or err("Cannot create save file in $userdir");
-	if ($orig_name =~ /^today\//) {
-		$q->param('name',"Testing"); # Set name to 'Testing'
+	if ($orig_name =~ /^today\/(.*)/) {
+		$q->param('name',$1); # remove "today/" from the name
 	}
 	$q->save(*SFILE);
 	close(SFILE);
