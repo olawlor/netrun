@@ -56,15 +56,18 @@ void netrun_call( void (*foofn)() ) {
 
 /** This is designed to keep calling our input-consuming code until EOF */
 bool netrun_data_readable(std::istream &is) {
-	static std::streampos last_pos=0u;
+	static long last_whitespace=1;
 	if (!is) return false; // EOF bit set (stream is done)
-	if (is.tellg()==last_pos) return false; // didn't read any data last time
 	
+	long this_whitespace=0;
 	// Skip whitespace, while checking for EOF
 	while (true) {
 		int c=is.get(); // read character
 		if (c==EOF) return false; // no data left
-		else if (c=='\r' || c=='\n' || c==' ' || c=='\t') continue;
+		else if (c=='\r' || c=='\n' || c==' ' || c=='\t') {
+			this_whitespace++;
+			continue;
+		}
 		else // a real character--throw it back and leave.
 		{ 
 			is.putback((char)c);  
@@ -72,8 +75,10 @@ bool netrun_data_readable(std::istream &is) {
 		}
 	}
 	
-	last_pos=is.tellg(); // store position of real character
-	return true; // data is readable
+	if (this_whitespace==0 && last_whitespace==0) return false; // didn't read anything
+	last_whitespace=this_whitespace;
+
+	return true;
 }
 
 
