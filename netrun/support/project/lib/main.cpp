@@ -33,11 +33,16 @@ void netrun_handle_ret(long value) {
 	printf("Program complete.  Return %ld (0x%lX)\n",value,value);
 }
 
+int trash_eax(void); // trashes return value register
+
 /* The overloaded netrun_call wrappers figure out if there's an argument or return type,
   and generate the argument and/or handle the return type. */
 template <typename R,typename A>
-void netrun_call( R (*foofn)(A) ) {
-	netrun_handle_ret(foofn(netrun_get_arg(A())));
+int netrun_call( R (*foofn)(A) ) {
+	volatile A arg=netrun_get_arg(A());
+	int e=trash_eax();
+	netrun_handle_ret(foofn(arg));
+	return e;
 }
 
 template <typename R>
@@ -46,8 +51,11 @@ void netrun_call( R (*foofn)() ) {
 }
 
 template <typename A>
-void netrun_call( void (*foofn)(A) ) {
-	foofn(netrun_get_arg(A()));
+int netrun_call( void (*foofn)(A) ) {
+	volatile A arg=netrun_get_arg(A());
+	int e=trash_eax();
+	foofn(arg);
+	return e;
 }
 
 void netrun_call( void (*foofn)() ) {
@@ -108,3 +116,6 @@ int main() {
 	
 	exit(0);
 }
+
+int trash_eax() { return 0xf00123; }
+
