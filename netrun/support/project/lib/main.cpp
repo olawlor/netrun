@@ -39,8 +39,8 @@ int trash_eax(void); // trashes return value register
   and generate the argument and/or handle the return type. */
 template <typename R,typename A>
 int netrun_call( R (*foofn)(A) ) {
-	volatile A arg=netrun_get_arg(A());
-	int e=trash_eax();
+	register A arg=netrun_get_arg(A());
+	register int e=trash_eax();
 	netrun_handle_ret(foofn(arg));
 	return e;
 }
@@ -52,8 +52,8 @@ void netrun_call( R (*foofn)() ) {
 
 template <typename A>
 int netrun_call( void (*foofn)(A) ) {
-	volatile A arg=netrun_get_arg(A());
-	int e=trash_eax();
+	register A arg=netrun_get_arg(A());
+	register int e=trash_eax();
 	foofn(arg);
 	return e;
 }
