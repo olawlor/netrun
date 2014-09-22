@@ -206,6 +206,7 @@ function InsertTab(obj,e) {
 //   never even gets called on IE (where onkeypress doesn't work with tabs)
 function EatTab(obj,e) {
    //alert('EatTab called with '+e.keyCode+' which '+e.which);
+
    if (e.keyCode ==13) { resizeForm(); }
    if (e.keyCode == 9) { // catch tab.
       if (e.stopPropogation) e.stopPropogation();
@@ -243,7 +244,9 @@ if ($rel_url eq "runa") { # ABET printing
 }
 
 
-print $q->start_form(-action=>$script_url);  # Always works, but not bookmarkable
+print $q->start_form(-action=>$script_url,-autocomplete=>"off"); 
+# autoComplete (e.g., LastPass) overwrites your new code with old code.
+# POST-style always works, but not bookmarkable.
 # print $q->start_form("GET"); # Bookmarkable, but doesn't work for long code...
 
 
@@ -291,6 +294,8 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	} else {
 		my_security("Homework name '$hw' contains invalid characters");
 	}
+	my $reset=$q->param('reset');
+
 	print("Loading homework '$hw'\n");
 	load_file("class/$hw.sav");
 
@@ -299,16 +304,25 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 
 	my $name=$q->param('name');
 	if ( -r "saved/$name.sav" ) {
-	# Already have a saved homework with this name!  Rename the *new* one
-		my $f=$name;
-		$name=$name."_again";
-		$q->param('name',"$name");
-		print(", with bogus name '$name'.  I did not overwrite your 
-previous attempt, which is still called '".saved_file_link($f)."'");
+	# Already have a saved homework with this name!  Use it instead
+		if ("$reset" ne "1") {
+			load_file("saved/$name.sav");
+		} else { # Reset to factory defaults
+			print("<p>Clean reset to original instructor's starting code.");
+		}
 	}
+
 	print("<br>");
 } 
 
+
+
+if ($q->param('code')) {  # Has code already:
+	if (!$q->param('foo_ret')) { # No explicit return type yet: set it
+		$q->param('foo_ret','int'); # default to int, for pre-2014-08 backward compat
+		$q->param('foo_arg0','void'); # default
+	}
+}
 
 
 
@@ -380,13 +394,17 @@ foreach my $class (reverse <$userdir/class/*>) {
   foreach my $hw (reverse <$class/L*>) {
     print_hw($hw);
   }
+  foreach my $hw (reverse <$class/[0-9]*>) {
+    print_hw($hw);
+  }
   if ( -d "$class/Example" ) {print_hw("$class/Example");}
   print "</ul>\n";
 }
 print "</ul>\n";
 
 
-print '<p><a href="help.html">NetRun Help</a>';
+
+print '<p><a href="help.html">NetRun Help</a> and <a href="examples.html">Examples</a>';
 
 if ($q->param('name')) {
   print '<p><a href="'."$rel_url?tarball=".$q->param('name').'">Download this file as a .tar archive</a>';
@@ -400,8 +418,9 @@ if ($q->param()) {
 		&param_to_cgiarg('code').&param_to_cgiarg('lang').
 		&param_to_cgiarg('mach').&param_to_cgiarg('mode').
 		&param_to_cgiarg('input').&param_to_cgiarg('check_input').
-		&param_to_cgiarg('linkwith').&param_to_cgiarg('orun').
-		&param_to_cgiarg('ocompile');
+		&param_to_cgiarg('linkwith').
+		&param_to_cgiarg('foo_ret').&param_to_cgiarg('foo_arg0').
+		&param_to_cgiarg('orun'). &param_to_cgiarg('ocompile');
 	if ($rel_url eq "runt") { # Lecture-notes copy-and-pastable version
 		use HTML::Entities; # <- needed for printable HTML
 		print '<hr>Code as run:<pre>'.encode_entities($q->param('code')).'</pre><p><a href="',$url,'">(Try this in NetRun now!)</a>';
@@ -470,8 +489,10 @@ sub print_main_form {
 	if ($q->param('hwnum')) {
 	# They're trying to solve a homework here.
 		my $hwnum=checkhwnum();
+		if (-e "class/$hwnum.html") {
 		# Print out the homework description
 		print "$hwnum Homework Instructions: ".my_cat("class/$hwnum.html")."<br>\n";
+		}
 	}
 
 	if ($rel_url eq "runh") { # Homework prep:
@@ -500,8 +521,14 @@ sub print_main_form {
 		if ($q->param('gradecode')) {print $q->hidden('gradecode',$q->param('gradecode'));}
 		if ($q->param('gradepost')) {print $q->hidden('gradepost',$q->param('gradepost'));}
 		
+		# Format the code area
 		my $numrows=3;
-		if ($q->param('code')) {$numrows=1+scalar(split("\n",$q->param('code')));}
+		if ($q->param('code')) {
+			my @rows=split("\n",$q->param('code'));
+			$numrows=1+scalar(@rows);
+			my $numrowsmax=30;
+			if ($numrows>$numrowsmax) {$numrows=$numrowsmax;}
+		}
 		
 		print	"Code to run:<br></DIV>\n ",
 			$q->textarea(-name=>'code',-columns=>85,-rows=>$numrows,
@@ -512,14 +539,15 @@ sub print_main_form {
 
 	print
 		"</TD></TR><TR><TD VALIGN=top>\n";
-	print "<div align=left>",$q->submit('Run It!'),"</div>";
+	print '<div align=left><input type="submit" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
 	
 	print
 		"<p>",
 		$q->checkbox_group(-name=>'check_input',
 			-values=>["Input"],
 			-id=>"check_input",
-			-onClick=>"updateButton('input')");
+			-onClick=>"updateButton('input')",
+			-attributes=>{-title=>"[alt-shift-i]",-accesskey=>"i"});
 
 	print '<div id="div_input" style="display:none">',
 		$q->textarea(-name=>"input",-rows=>4,-columns=>30),
@@ -550,6 +578,13 @@ sub print_main_form {
 			'GPGPU',
 			'OpenCL',
 			'Python',
+			'Python3',
+			'Perl',
+			'PHP',
+			'JavaScript',
+			'Ruby',
+			'Bash',
+			'Prolog',
 			'glfp',
 			'glsl',
 			'funk_emu',
@@ -559,6 +594,7 @@ sub print_main_form {
 				'glfp' => 'OpenGL Fragment Program',
 				'glsl' => 'OpenGL Shader Language (GLSL)',
 				'spice' => 'SPICE Analog Circuit',
+				'C++0x' => 'C++11',
 				'vhdl' => 'VHDL Digital Circuit'},
 			-default=>['C++']),"\n";
 
@@ -573,6 +609,16 @@ sub print_main_form {
 			},
 			-default=>['frag']),"\n";
 
+	print   "<p>Function: ",
+		$q->popup_menu(-name=>'foo_ret',
+			-values=>['void','long','int','double','float','std::string'],
+			-default=>['long']),
+		" foo(",
+		$q->popup_menu(-name=>'foo_arg0',
+			-values=>['void','long','int','double','float','std::string'],
+			-default=>['void']),
+		")\n";
+
 	print
 		"<p>Machine:",
 		$q->popup_menu(-name=>'mach',
@@ -582,7 +628,7 @@ sub print_main_form {
 				'phenom64',
 				'x86_2core',
 				'x86',
-				'x86_atom',
+			#	'x86_atom',
 			#	'x86_4core',
 			#	'ia64',
 				'win32',
@@ -590,11 +636,11 @@ sub print_main_form {
 				'486',
 			#	'Alpha',
 				'ARM',
-			#	'SPARC',
+				'SPARC',
 				'MIPS',
-				'PPC'
+				'PPC',
 			#	'PPC_EMU',
-			#	'PIC'
+				'PIC'
 			],
 			-labels=>{
 				'x64' => 'x86_64 Q6600 x4',
@@ -612,11 +658,11 @@ sub print_main_form {
 				'ARM' => 'ARM (ARMv6 Linux)',
 				'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 				'MIPS' => 'MIPS (SGI IRIX)',
-				'PPC' => 'PowerPC (OS X)'
+				'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
-			#	'PIC' => 'PIC Microcontroller'
+				'PIC' => 'PIC Microcontroller'
 			},
-			-default=>['x86']),"\n";
+			-default=>['x64']),"\n";
 
 	print
 		"<p>Compile options:",
@@ -633,6 +679,10 @@ sub print_main_form {
 	print '<p>Link with: ',
 		$q->textfield(-name=>"linkwith");
 
+	if ($q->param('hwnum')) { # add reset link
+		print '<p><a href="?hw='.$q->param('hwnum').'&reset=1">Clean reset</a> this homework problem (discards your work)';
+	}
+
 	if ($q->param('lang') eq "MPI") {
 		print '<p>MPI Processes (1-20): ',
 			$q->textfield(-name=>"numprocs");
@@ -642,18 +692,13 @@ sub print_main_form {
 	if (1) {
 		print "Announcements:
 	<UL>
-		<li>Added gcc 4.7 C++0x (2011-10-05)
-		<li>Experimental OpenCL/EPGPU (2011-05-03)
-		<li>Added Sandy Bridge and Phenom II (2011-04-08)
-		<li>Experimental GPGPU (2011-03-30)
-		<li>Experimental ARM hardware (2011-02-09)
-		<li>Experimental MPI and CUDA (2010-11-30)
-		<li>Added Intel Atom backend (2010-11-29)
-		<li>Added <a href=http://en.wikipedia.org/wiki/C%2B%2B0x>C++0x</a> via g++ 4.5 (2010-11-05)
+		<li>Disqus comments for homeworks after OK! (2014-08-22)
+		<li>foo can take or return long, string, etc.  (2014-08-20)
+		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
 	</UL>
 	";
 	}
-	print "Version 2011-10-21";
+	print "Version 2014-09-07";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -713,6 +758,23 @@ sub compile_and_run {
 		my $hw_und=slash_to_underscore($hwnum);
 		journal("hwok $hw_und");
 		system("cp","$proj->{src}","hw/$hw_und");
+		
+		
+		print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = "netrun"; // required: replace example with your forum shortname
+	var disqus_url = "https://lawlor.cs.uaf.edu/netrun/run?hw='.$hwnum.'";
+        (function() {
+            var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
+            dsq.src = "//" + disqus_shortname + ".disqus.com/embed.js";
+            (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+';
 	}
 }
 
@@ -721,13 +783,32 @@ sub compile_and_run {
 sub untaint_name {
 	my $name=shift;
 	if (!$name) { $name="Testing"; }
-	if ($name =~ /^(\w[\w. +-]+)$/ ) {
+
+	# 'today' is the one writeable subdirectory (must be manually inserted in run/user/save)
+	if ($name =~ /^today\/(\w[\w. +-]+)$/ ) {
+		$name='today/'.$1; # untaint and put back
+	} elsif ($name =~ /^(\w[\w. +-]+)$/ ) {
 		$name = $1; # Untaint
-		$name =~ s/ /_/g;
 	} else {
 		my_security("Run name '$name' contains invalid characters");
 	}
+
+	# Replace spaces with underscores
+	$name =~ s/ /_/g;
 	return $name;
+}
+
+## Untaint this C/C++ type name, and return it
+sub untaint_typename {
+	my $t=$q->param(shift);
+	
+	if ($t =~ /^(\w[\w:._<>]*)$/ ) {
+		$t = $1; # Untaint
+	} else {
+		my_security("Type name '$t' contains invalid characters");
+	}
+
+	return $t;
 }
 
 ########################### create_project_directory ############################
@@ -741,13 +822,14 @@ sub create_project_directory {
 	# Replace Microsoft curly quotes in code with normal ASCII quotes:
 	$code =~ s/[\x93\x94]/\"/gs;
 	# Replace /r/n with just /n:
-	$code =~ s/[\r]/ /g;  # UNIX-ify newlines
+	$code =~ s/[\r]//g;  # UNIX-ify newlines
 	
-	if ($code =~ /^([\w\s~'"!#\$@%\^&*\(\)\{\}_\-+=\]\[\|\\\/:;<>,\.?]+)$/) {
+	if ($code =~ /^([\w\s~'"!#\$@%\^&*\(\)\{\}_\-+=\]\[\|\`\\\/:;<>,\.?]+)$/) {
 		$code=$1; # Looks OK-- untaint it.
 	} else {
 		my_security("Code '$code' contains invalid characters");
 	}
+
 	my $gradecode = $q->param('gradecode');
 	if (!$gradecode) { $gradecode=""; }
 	elsif ($gradecode =~ /^([\w\s~'"!#\$@%\^&*\(\)\{\}_\-+=\]\[\|\\\/:;<>,\.?]+)$/) {
@@ -797,17 +879,18 @@ sub create_project_directory {
 	my $srcadd=""; # Stuff to link with the user's code
 	my $toolpre=""; # Path to compiler & disassembler (& compiler prefix)
 	my $compiler=""; # Name of tool used to create output
-	my @cflags=("-c"); # Flags passed to compiler
+	my @cflags=(); # Flags passed to compiler
 	my $linker="g++"; # Used to link output
 	my @lflags=(); # Linker flags
 	my $disassembler="objdump -drC -M intel"; # Disassembler
 	my $main="main.obj"; # Prebuilt copy of main routine (for speed)
-	my $sr_host="localhost";  # Network target for build (needed outside)
+	my $sr_host="";  # Network target for build (needed outside)
 	my $sr_port="2983";
 	my $saferun="netrun/safe_run.sh";
+	my $srcflag="-c";
 	my $outflag="-o";
 	my $netrun="netrun/obj";
-	
+	my $scriptrun='/home/netrun_scripting/chrootrun/chrootrun ';
 
 	# Prepare build subdirectory
 	system("rm","-fr","project");
@@ -817,10 +900,21 @@ sub create_project_directory {
 	# Is a homework-- try grading as well...
 		system("cp","class/$hwnum.grd","project/netrun/grade.sh");
 	}
+	
+	my $ret="int";
+	my $arg0="void";
+	my $proto="int foo(void)";
+	if ($q->param('foo_ret')) {
+		$ret=untaint_typename('foo_ret');
+		$arg0=untaint_typename('foo_arg0');
+		if ($arg0 ne "void") { $proto="$ret foo($arg0 bar)"; }
+		else { $proto="$ret foo($arg0)"; }
+		push(@cflags,"-DNETRUN_FOO_DECL='".$proto."'");
+	}
 
 	if ($mode eq 'main') { $main=""; } # User will write main routine
 
-	if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"-O");}
+	if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"-O1");}
 	if (grep(/^Debug$/, @ocompile)==1) {push(@cflags,"-g");}
 	if (grep(/^Warnings$/, @ocompile)==1) {push(@cflags,"-Wall");}
 	if (grep(/^Shared$/, @ocompile)==1) {push(@cflags,"-fPIC");}
@@ -871,9 +965,14 @@ using namespace std; /* ONLY for 202 examples... */
 //using std::cout; using std::cin; using std::endl; /* <- avoid annoyance; Gaddis textbook compatibility */
 
 ' . $gradecode;
+		if ($mode eq 'main') { # whole program, with headers
+			$srcpre=$gradecode;
+		}
 		if ($mode eq 'frag') { # Subroutine fragment
-			$srcpre=$srcpre . "int foo(void) {\n";
-			$srcpost="\n;\n  return 0;\n}\n" . $gradepost;
+			$srcpre=$srcpre . $proto . " {\n";
+			$srcpost="\n;";
+			if ($ret ne "void") { $srcpost .= "\n  return 0;"; }
+			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
 	elsif ( $lang eq "C") { ############# C
@@ -909,6 +1008,25 @@ using namespace std; /* ONLY for 202 examples... */
 		push(@lflags,"-Dfoo=foo_");
 		$main="lib/main.cpp"; # Must recompile main.cpp with new foo name
 	}
+	elsif ( $lang eq "Haskell") { # Fails with mkTextEncoding: invalid argument
+		$compiler="ghc";
+		$linker="ghc";
+		$srcext="hs";
+		$srcpre="";
+		$srcpost="";
+		$main=""; # Disable C-style main
+	}
+	elsif ( $lang eq "Prolog") { 
+		$compiler="gplc";
+		$linker="gplc";
+		@cflags=();
+		@lflags=();
+		$srcext="pl";
+		$srcpre="";
+		$srcpost="";
+		$srcflag="-c";
+		$main=""; # Disable main
+	}
 	elsif ( $lang eq "Assembly") { ################# GNU Assembly
 		$compiler="as"; 
 		$disassembler="objdump -drC"; # Disassemble with GNU syntax...
@@ -923,12 +1041,14 @@ using namespace std; /* ONLY for 202 examples... */
 			$srcpre .="\nfoo:\n";
 			$srcpost=$gradepost . "\nret";
 		}
-		@cflags=(); # Get rid of (C-specific) flags
+		$srcflag="";
+		# @cflags=(); # Get rid of (C-specific) flags
 	}
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
-		$compiler="nasm";
+		$compiler="nasm -f elf32 ";
 		$srcext="S";
 		$srcpre='
+section .text
 global foo
 ';
 		if ($mode eq 'frag') { # Subroutine fragment
@@ -938,7 +1058,7 @@ global foo
 			$srcpre .=$gradecode;
 			$srcpost.=$gradepost;
 		}
-		@cflags=("-f","elf32"); # Get rid of (C-specific) flags, add nasm flags
+		$srcflag="";
 	}
 	elsif ( $lang eq "MPI") {
 		$sr_host="powerwall0";
@@ -961,9 +1081,9 @@ global foo
 		$srcext='cu';
 		$compiler='/usr/local/cuda/bin/nvcc   -keep --opencc-options -LIST:source=on   ';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
-		$compiler="$compiler -c";
 		$disassembler="cat code.ptx; echo ";
-		@cflags=();
+		# @cflags=();
+		$srcflag="-c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
@@ -994,9 +1114,39 @@ global foo
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "Python") {
-		$sr_host="powerwall5";
+		$netrun='netrun/scripting';
 		$srcext='py';
-		$netrun='netrun/python';
+		$saferun=$scriptrun . '/usr/bin/python '
+	}
+	elsif ( $lang eq "Python3") {
+		$netrun='netrun/scripting';
+		$srcext='py';
+		$saferun=$scriptrun . '/usr/bin/python3 '
+	}
+	elsif ( $lang eq "Perl") {
+		$netrun='netrun/scripting';
+		$srcext='pl';
+		$saferun=$scriptrun . '/usr/bin/perl '
+	}
+	elsif ( $lang eq "PHP") {
+		$netrun='netrun/scripting';
+		$srcext='php';
+		$saferun=$scriptrun . '/usr/bin/php '
+	}
+	elsif ( $lang eq "JavaScript") {
+		$netrun='netrun/scripting';
+		$srcext='js';
+		$saferun=$scriptrun . '/usr/bin/v8-shell  '
+	}
+	elsif ( $lang eq "Ruby") {
+		$netrun='netrun/scripting';
+		$srcext='rb';
+		$saferun=$scriptrun . '/usr/bin/ruby  '
+	}
+	elsif ( $lang eq "Bash") {
+		$netrun='netrun/scripting';
+		$srcext='sh';
+		$saferun=$scriptrun . '/bin/bash  '
 	}
 	elsif ( $lang eq "glfp") {
 		$sr_host="powerwall6";
@@ -1064,9 +1214,12 @@ const int program[]={';
 	}
 
 	# Machine switch
-	if ( $sr_host ne "localhost" ) { # already set--nothing to do.
-			
-	} elsif ($mach eq "x86") {
+	if ( $sr_host ne "" ) { # already set--nothing to do.
+		
+	} elsif ($netrun eq "netrun/scripting") { # The one scripting host
+		$sr_host="sandy"; $sr_port=2984;
+	}
+	elsif ($mach eq "x86") {
 	print "FYI-- This is a hyperthreaded 2.8GHz Intel Pentium 4 machine.<br>\n";
 		$sr_host="olawlor";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
@@ -1074,14 +1227,14 @@ const int program[]={';
 	} elsif ($mach eq "sandy64") {
 	print "FYI-- This is a four-core Intel Sandy Bridge i5 2400.<br>\n";
 		$sr_host="sandy";
-		if ( $lang eq "Assembly-NASM") { @cflags=("-f","elf64");}
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker="g++ -fopenmp ";}
 	} elsif ($mach eq "phenom64") {
 	print "FYI-- This is a six-core AMD Phenom II.<br>\n";
 		$sr_host="phenom";
-		if ( $lang eq "Assembly-NASM") { @cflags=("-f","elf64");}
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse4a -m3dnow"); }
 		if ($lang eq "OpenMP") {$compiler=$linker="g++ -fopenmp ";}
@@ -1099,7 +1252,7 @@ const int program[]={';
 	print "FYI-- This is a dual-core 1.8GHz Intel Core2 Duo machine.<br>\n";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
-		$sr_host="powerwall5";
+		$sr_host="powerwall8";
 	} elsif ( $mach eq "x86_4core") {
 	print "FYI-- This is a quad-core 2.4GHz Intel Core2 Q6600 machine.<br>\n";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
@@ -1109,7 +1262,7 @@ const int program[]={';
 #	print "WARNING-- x64 machine is emulated with QEMU, and may be slow (10 seconds)<br>\n";
 #		$sr_host="localhost";
 #		$sr_port="9923";
-		if ( $lang eq "Assembly-NASM") { @cflags=("-f","elf64");}
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
 		$sr_host="viz1";
@@ -1154,10 +1307,10 @@ const int program[]={';
 		
 	} elsif ( $mach eq "win32") {
 	print "WARNING-- Win32 machine is emulated with QEMU, and may be slow (half a minute!)<br>\n";
-		@cflags=("/c","/EHsc","/DWIN32=1");
-		@lflags=("/EHsc","/DWIN32=1");
+		@cflags=("/EHsc","/DWIN32=1");
 		if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"/O2");}
 		if (grep(/^Time$/, @orun)==1) {push(@lflags,"/DTIME_FOO=1");}
+		$srcflag="/c";
 		$outflag="/o";
 		# Run under WINE (slow, dangerous...)
 		# $compiler=$linker="'/dos/Program Files/OrionDev/bin/cl.exe'";
@@ -1214,15 +1367,24 @@ const int program[]={';
 		$sr_port="9933";
 	}
 	elsif ( $mach eq "PIC") {
-	print "Patience: it takes about 12 seconds to upload a program to the PIC microcontroller...<br>\n";
+	print "Patience: it takes about 10 seconds to upload a program to the PIC microcontroller...<br>\n";
 		if ( $lang ne "C" ) { 
-			print "Only C is supported";
+			print "Sorry, only C is supported";
 			security_err("Invalid language for PIC controller");
 		}
+		# It's such a weird environment, almost nothing works:
 		$netrun="netrun/pic";
+		$disassembler='cat run/main.lst #';
+		if (grep(/^Disassemble$/, @orun)==1) {$netrun="$netrun netrun/dis";}
+
+
 		$srcpre="";
 		$srcpost="";
-		$sr_host="powerwall9";
+		if ($lang eq "C") {
+			$srcpre='#include "pic_setup.h"'
+		}
+		$sr_host="phenom";
+		$sr_port="2883";
 	}
 	else {
 		security_err("Invalid machine '$mach'");
@@ -1240,6 +1402,9 @@ const int program[]={';
 	# Write all their parameters to a .sav file
 	my_mkdir("saved");
 	open(SFILE,">$userdir/saved/$orig_name.sav") or err("Cannot create save file in $userdir");
+	if ($orig_name =~ /^today\/(.*)/) {
+		$q->param('name',$1); # remove "today/" from the name
+	}
 	$q->save(*SFILE);
 	close(SFILE);
 	system("/bin/cp","$src","$userdir/saved/$orig_name.txt");
@@ -1312,6 +1477,7 @@ MAIN=$main
 HWNUM=$hwnum
 STUDENT=$user
 SAFERUN=$saferun
+SRCFLAG=$srcflag
 OUTFLAG=$outflag
 LINKWITH=$linkwith_targets
 
