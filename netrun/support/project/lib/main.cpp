@@ -9,6 +9,16 @@
 #include "inc.c"  /* Just include implementation of utility routines here... */
 #include "signals.c"
 
+#if defined(__GNUC__) && (__GNUC__<3)
+/* Special simple version for primitive compiler on ancient MIPS machine */
+void netrun_call( int (*foofn)(void) ) {
+	int value=foofn();
+	printf("Program complete.  Return %d (0x%X)\n",value,value);
+}
+
+bool netrun_data_readable(void) { return false; }
+
+#else /* normal C++ operator overloaded version */
 #include <iostream>
 
 /* These overloaded functions generate foo's arguments. */
@@ -63,7 +73,8 @@ void netrun_call( void (*foofn)() ) {
 }
 
 /** This is designed to keep calling our input-consuming code until EOF */
-bool netrun_data_readable(std::istream &is) {
+bool netrun_data_readable(void) {
+	std::istream &is=std::cin;
 	static long last_whitespace=1;
 	if (!is) return false; // EOF bit set (stream is done)
 	
@@ -88,7 +99,7 @@ bool netrun_data_readable(std::istream &is) {
 
 	return true;
 }
-
+#endif
 
 /* This junk is used to detect modifications to preserved registers: */
 int g0=0xf00d00, g1=0xf00d01, g2=0xf00d02, g3=0xf00d03, g4=0xf00d04, g5=0xf00d05, g6=0xf00d06, g7=0xf00d07;
@@ -112,7 +123,7 @@ int main() {
 "Either some preserved registers were overwritten,\n"
 "or else part of the stack was changed or overwritten!\n");
 
-	} while (netrun_data_readable(std::cin));
+	} while (netrun_data_readable());
 	
 	exit(0);
 }

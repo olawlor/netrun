@@ -15,6 +15,6 @@ fi
 mkdir -p run/etc
 [ -r /etc/resolv.conf ] && cp /etc/resolv.conf run/etc/
 mkdir -p run/dev
-dd if=/dev/urandom of=run/dev/urandom bs=4k count=1 >& /dev/null
+dd if=/dev/urandom of=run/dev/urandom bs=4k count=1 > /dev/null 2>&1
 
 exec /usr/local/bin/s4g_chroot "$@"
