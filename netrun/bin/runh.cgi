@@ -880,7 +880,7 @@ sub create_project_directory {
 	my $toolpre=""; # Path to compiler & disassembler (& compiler prefix)
 	my $compiler=""; # Name of tool used to create output
 	my @cflags=(); # Flags passed to compiler
-	my $linker="g++"; # Used to link output
+	my $linker="g++ \$(CFLAGS) "; # Used to link output
 	my @lflags=(); # Linker flags
 	my $disassembler="objdump -drC -M intel"; # Disassembler
 	my $main="main.obj"; # Prebuilt copy of main routine (for speed)
@@ -941,12 +941,12 @@ sub create_project_directory {
 ###############################################	
 # Language switch
 	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "OpenMP") {  ############# C++
-		$compiler="g++";
+		$compiler='g++ $(CFLAGS)';
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
-		if ($lang eq "OpenMP") {$compiler=$linker="g++-4.2 -fopenmp -msse3";}
-		if ($lang eq "C++0x") {$compiler=$linker="g++-4.7 -fopenmp -msse3 -std=c++0x";}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++-4.2 -fopenmp -msse3 $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -msse3 -std=c++0x $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -976,7 +976,7 @@ using namespace std; /* ONLY for 202 examples... */
 		}
 	}
 	elsif ( $lang eq "C") { ############# C
-		$compiler="gcc -fomit-frame-pointer"; 
+		$compiler="gcc -fomit-frame-pointer $(CFLAGS)"; 
 		$srcext="c";
 		$srcpre='/* NetRun C Wrapper (Public Domain) */
 #include <stdio.h>
@@ -1063,7 +1063,7 @@ global foo
 	elsif ( $lang eq "MPI") {
 		$sr_host="powerwall0";
 		$srcext='cpp';
-		$compiler='mpiCC -msse3 ';
+		$compiler='mpiCC -msse3 $(CFLAGS)';
 		$linker=$compiler;
 
 		my $numprocs=2; # Sanity-check the processor count:
@@ -1079,7 +1079,7 @@ global foo
 		$sr_host="powerwall0";
 #		$sr_host="sandy";
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc   -keep --opencc-options -LIST:source=on   ';
+		$compiler='/usr/local/cuda/bin/nvcc   -keep --opencc-options -LIST:source=on   $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();
@@ -1090,7 +1090,7 @@ global foo
 		$sr_host="powerwall0";
 #		$sr_host="137.229.25.206";
 		$srcext='cpp';
-		$compiler='g++   ';
+		$compiler='g++   $(CFLAGS)';
 		$linker="$compiler ";
 		push(@lflags,"/usr/lib/libglut_plain/libglut.a"); 
 		push(@lflags,"/usr/lib/libGLEW.a");
@@ -1102,7 +1102,7 @@ global foo
 		$sr_host="powerwall0";
 #		$sr_host="sandy";
 		$srcext='cpp';
-		$compiler='g++   ';
+		$compiler='g++   $(CFLAGS)';
 		$linker="$compiler ";
 		system("cp /usr/local/include/epgpu.* project/");
 		push(@lflags,"-L/usr/local/cuda/include/"); 
@@ -1184,7 +1184,7 @@ uniform sampler2D tex1, tex3, tex4, tex5; // input textures (from files)
 		$netrun='netrun/glsl';
 	}
 	elsif ( $lang eq "funk_emu") {
-		$compiler="g++"; 
+		$compiler="g++ $(CFLAGS)"; 
 		$srcext="cpp";
 		$srcpre='/* Here\'s the user\'s program, with bytes separated by commas... */
 const int program[]={';
@@ -1230,14 +1230,14 @@ const int program[]={';
 		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
-		if ($lang eq "OpenMP") {$compiler=$linker="g++ -fopenmp ";}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "phenom64") {
 	print "FYI-- This is a six-core AMD Phenom II.<br>\n";
 		$sr_host="phenom";
 		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse4a -m3dnow"); }
-		if ($lang eq "OpenMP") {$compiler=$linker="g++ -fopenmp ";}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ( $mach eq "x86_atom") {
 	print "FYI-- This is a 1.6Ghz Intel Atom 330 dual-core machine.<br>\n";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
@@ -1316,7 +1316,7 @@ const int program[]={';
 		# $compiler=$linker="'/dos/Program Files/OrionDev/bin/cl.exe'";
 		# $disassembler="/opt/cross/win32/bin/i386-mingw32msvc-objdump -drC";
 		# Run on real or emulated windows box.
-		$compiler=$linker='cl /nologo ';
+		$compiler=$linker='cl /nologo $(CFLAGS)';
 		
 		if ( $lang eq "C" ) {
 		} elsif ( $lang eq "C++" ) {
