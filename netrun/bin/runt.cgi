@@ -384,14 +384,14 @@ foreach my $class (reverse <$userdir/class/*>) {
    foreach my $hw (reverse <$class/tHW*>) {
       print_hw($hw);
     }
-   foreach my $hw (reverse <$class/tL*>) {
+   foreach my $hw (reverse <$class/t[MFL]*>) {
       print_hw($hw);
     }
   }
   foreach my $hw (reverse <$class/HW*>) {
     print_hw($hw);
   }
-  foreach my $hw (reverse <$class/L*>) {
+  foreach my $hw (reverse <$class/[MFL]*>) {
     print_hw($hw);
   }
   foreach my $hw (reverse <$class/[0-9]*>) {

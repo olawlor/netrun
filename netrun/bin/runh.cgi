@@ -384,14 +384,14 @@ foreach my $class (reverse <$userdir/class/*>) {
    foreach my $hw (reverse <$class/tHW*>) {
       print_hw($hw);
     }
-   foreach my $hw (reverse <$class/tL*>) {
+   foreach my $hw (reverse <$class/t[MFL]*>) {
       print_hw($hw);
     }
   }
   foreach my $hw (reverse <$class/HW*>) {
     print_hw($hw);
   }
-  foreach my $hw (reverse <$class/L*>) {
+  foreach my $hw (reverse <$class/[MFL]*>) {
     print_hw($hw);
   }
   foreach my $hw (reverse <$class/[0-9]*>) {
@@ -976,7 +976,7 @@ using namespace std; /* ONLY for 202 examples... */
 		}
 	}
 	elsif ( $lang eq "C") { ############# C
-		$compiler="gcc -fomit-frame-pointer $(CFLAGS)"; 
+		$compiler='gcc -fomit-frame-pointer $(CFLAGS)'; 
 		$srcext="c";
 		$srcpre='/* NetRun C Wrapper (Public Domain) */
 #include <stdio.h>
@@ -988,7 +988,7 @@ using namespace std; /* ONLY for 202 examples... */
 
 ' . $gradecode;
 		if ($mode eq 'frag') { # Subroutine fragment
-			$srcpre=$srcpre . "int foo(void) {\n";
+			$srcpre=$srcpre . $proto ." {\n";
 			$srcpost="\n;\n  return 0;\n}\n" . $gradepost;
 		}
 	}
