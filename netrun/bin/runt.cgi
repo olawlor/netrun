@@ -1076,18 +1076,19 @@ global foo
 		$saferun="netrun/safe_MPI.sh $numprocs ";
 	}
 	elsif ( $lang eq "CUDA") {
-		$sr_host="powerwall0";
+		$sr_host="powerwall10";
 #		$sr_host="sandy";
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc   -keep --opencc-options -LIST:source=on   $(CFLAGS)';
+		$compiler='/usr/local/cuda/bin/nvcc   -keep  $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
 		$disassembler="cat code.ptx; echo ";
-		# @cflags=();
+		# @cflags=();  # -Wall kills it
+		@cflags = grep { $_ != "-Wall" } @cflags;
 		$srcflag="-c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
-		$sr_host="powerwall0";
+		$sr_host="powerwall10";
 #		$sr_host="137.229.25.206";
 		$srcext='cpp';
 		$compiler='g++   $(CFLAGS)';
@@ -1099,7 +1100,7 @@ global foo
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "OpenCL") {
-		$sr_host="powerwall0";
+		$sr_host="powerwall10";
 #		$sr_host="sandy";
 		$srcext='cpp';
 		$compiler='g++   $(CFLAGS)';
@@ -1107,9 +1108,7 @@ global foo
 		system("cp /usr/local/include/epgpu.* project/");
 		push(@lflags,"-L/usr/local/cuda/include/"); 
 		push(@cflags,"-I/usr/local/cuda/include/");
-		push(@lflags,"/usr/lib/libglut_plain/libglut.a"); 
-		push(@lflags,"/usr/lib/libGLEW.a");
-		push(@lflags,"-lGL -lGLU -lOpenCL");
+		push(@lflags,"-L/usr/lib/x86_64-linux-gnu/ -lGL -lGLU -lGLEW -lglut -lOpenCL");
 		$compiler="$compiler -c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
