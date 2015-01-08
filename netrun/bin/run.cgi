@@ -1079,7 +1079,7 @@ global foo
 		$sr_host="powerwall10";
 #		$sr_host="sandy";
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc   -keep  $(CFLAGS)';
+		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30  -keep  $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();  # -Wall kills it
