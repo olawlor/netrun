@@ -961,8 +961,7 @@ sub create_project_directory {
 #include <map>
 #include <string>
 #include "lib/inc.h"
-using namespace std; /* ONLY for 202 examples... */
-//using std::cout; using std::cin; using std::endl; /* <- avoid annoyance; Gaddis textbook compatibility */
+using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code */
 
 ' . $gradecode;
 		if ($mode eq 'main') { # whole program, with headers
