@@ -636,6 +636,7 @@ sub print_main_form {
 				'486',
 			#	'Alpha',
 				'ARM',
+				'ARMpi2',
 				'SPARC',
 				'MIPS',
 				'PPC',
@@ -655,6 +656,7 @@ sub print_main_form {
 				'x86_2' => 'x86 dual P3 (Linux)',
 				'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
+				'ARMpi2' => 'ARM (Raspberry Pi 2)',
 				'ARM' => 'ARM (ARMv6 Linux)',
 				'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 				'MIPS' => 'MIPS (SGI IRIX)',
@@ -946,7 +948,7 @@ sub create_project_directory {
 			push(@cflags,"-fomit-frame-pointer");
 	        }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++-4.2 -fopenmp -msse3 $(CFLAGS)';}
-		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -msse3 -std=c++0x $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -std=c++0x $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -1288,10 +1290,13 @@ const int program[]={';
 		$sr_host="viz1";
 		$sr_port=2984;
 		$saferun="netrun/safe_arm.sh";
+		
 		$disassembler="objdump -drC";   # -M freaks out this version
 		if ( $lang eq "Assembly") { ################# GNU Assembly
 			$srcpre='
 .syntax unified  @ no #constants
+.align 2
+.code 32
 .section .text
 '. $gradecode .'
 .global foo
@@ -1302,6 +1307,30 @@ const int program[]={';
 			}
 		}
 
+		
+	} elsif ( $mach eq "ARMpi2") {
+	print "FYI-- This is an 900MHz Raspberry Pi 2 B+ (ARMv7r5)<br>\n";
+		$sr_host="lawpi2";
+		$sr_port=2983;
+		push(@cflags,"-marm");
+		if ( $lang eq "Assembly") {
+			$compiler="as -mcpu=cortex-a7 -mfpu=vfpv4 "; 
+		}
+		$disassembler="objdump -drC";   # -M freaks out this version
+		if ( $lang eq "Assembly") { ################# GNU Assembly
+			$srcpre='
+.syntax unified  @ no #constants
+.align 2
+.code 32
+.text
+'. $gradecode .'
+.global foo
+';
+			if ($mode eq 'frag') { # Subroutine fragment
+				$srcpre .="\nfoo:\n";
+				$srcpost='bx lr'; 		
+			}
+		}
 		
 	} elsif ( $mach eq "win32") {
 	print "WARNING-- Win32 machine is emulated with QEMU, and may be slow (half a minute!)<br>\n";
