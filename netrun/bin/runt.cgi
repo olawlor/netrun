@@ -1,6 +1,6 @@
 #!/usr/bin/perl -Tw
-# NetRun CGI Script: for ABET, dump a directory full of .sav files
-#  Orion Sky Lawlor, olawlor@acm.org, 2005-2006 (Public domain)
+# NetRun CGI Script, with editor support
+#  Orion Sky Lawlor, olawlor@acm.org, 2005-2016 (Public domain)
 
 use strict;
 
@@ -220,9 +220,41 @@ function startupCode() {
 	updateButton('options');
 	resizeForm();
 }
+
+//]]></script>
+
+<script src='ui/jquery-2.2.0.min.js'></script>
+<link rel='stylesheet' href='ui/jquery-ui.min.css'>
+<script src='ui/jquery-ui.min.js'></script>
+
+<style type='text/css' media='screen'>
+input, textarea, pre {
+	font-family: monospace,sans-serif,courier;
+	font-weight: 900;
+}
+
+#ace_editor_resize {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	min-width: 300px;
+	min-height: 150px;
+	border: 1px solid black;
+}
+
+#ace_editor {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+</style>
+
+<script type='text/javascript'>//<![CDATA[
+
 ",   ######### javascript ends here
-		-onLoad=>"startupCode()",
-		-style=>{'src'=>'style_default.css'});
+		-onLoad=>"startupCode()");
 
 # print $q->h1('UAF CS NetRun');
 
@@ -536,10 +568,70 @@ sub print_main_form {
 				-onkeypress=>"javascript:return EatTab(this,event);" 
 			),"\n";
 	}
+	my $ace_support=<<'END_ACE';
+<!-- Ace editor support: -->
 
-	print
+<div id="ace_editor_resize">
+    <div id="ace_editor"></div>
+</div>
+
+<script src="./ui/ace-min/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    // Hides textbox if Javascript is enabled
+    var old_codebox=document.getElementsByName("code")[0];
+    old_codebox.style.display = "none";
+
+    var editor = ace.edit("ace_editor");
+    editor.setTheme("ace/theme/github");
+    editor.setShowPrintMargin(false);
+    editor.setShowInvisibles(false);
+    editor.getSession().setMode("ace/mode/c_cpp");
+    editor.getSession().setUseWrapMode(false);
+    editor.getSession().setUseWorker(false);
+    editor.getSession().setUseSoftTabs(false);
+    editor.$blockScrolling=Infinity; // stupid warning
+    editor.getSession().setValue(old_codebox.value);
+
+    // Save/restore editor size using browser localStorage
+    var div_resize=$("#ace_editor_resize"); // document.getElementById("ace_editor_resize");
+    var store=window.localStorage;
+    var editsize=null;
+    if (store) { // try to load editor size from storage
+    	try { 
+	    	var str=store.getItem("editsize");
+	    	if (str) { // set initial size of div
+	    	   var editsize=JSON.parse(str);
+	    	   if (editsize.w && editsize.h) {
+		    	   div_resize.css({
+		    	   	width:editsize.w+"px",
+		    	   	height:editsize.h+"px"
+		    	   });
+		    	   editor.resize();
+	    	   }
+	    	}
+    	} catch (e) {
+    		console.log("Ignoring error restoring editor size: "+e);
+    	}
+    }
+    
+    div_resize.resizable({
+        resize: function( event, ui ) {
+          editor.resize();
+          if (store) { // try to save editor size to storage
+            var editsize={w:div_resize.width(),h:div_resize.height()};
+            var str=JSON.stringify(editsize);
+            console.log("Storing editor size as "+str);
+            store.setItem("editsize",str);
+          }
+        }
+    });
+    
+</script>
+END_ACE
+
+	print $ace_support,
 		"</TD></TR><TR><TD VALIGN=top>\n";
-	print '<div align=left><input type="submit" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
+	print '<div align=left><input type="submit" onclick="document.getElementsByName(\'code\')[0].value=editor.getSession().getValue();" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
 	
 	print
 		"<p>",
