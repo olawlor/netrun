@@ -715,15 +715,16 @@ END_ACE
 		"<p>Machine:",
 		$q->popup_menu(-name=>'mach',
 			-values=>[
-				'x64',
+				'skylake64',
 				'sandy64',
 				'phenom64',
-				'x86_2core',
+				'x64',
 				'x86',
+			#	'x86_2core',
 			#	'x86_atom',
 			#	'x86_4core',
 			#	'ia64',
-				'win32',
+			#	'win32',
 				'x86_2',
 				'486',
 			#	'Alpha',
@@ -731,20 +732,21 @@ END_ACE
 				'ARMpi2',
 				'SPARC',
 				'MIPS',
-				'PPC',
+			#	'PPC',
 			#	'PPC_EMU',
-				'PIC'
+			#	'PIC'
 			],
 			-labels=>{
-				'x64' => 'x86_64 Q6600 x4',
+				'skylake64' => 'x86_64 Skylake x4',
 				'sandy64' => 'x86_64 Sandy Bridge x4',
 				'phenom64' => 'x86_64 Phenom II x6',
+				'x64' => 'x86_64 Q6600 x4',
 				'x86' => 'x86 P4 x2',
-				'x86_atom' => 'x86 Atom x1',
-				'x86_2core' => 'x86 Core2 x2',
+			#	'x86_atom' => 'x86 Atom x1',
+			#	'x86_2core' => 'x86 Core2 x2',
 			#	'x86_4core' => 'x86  (Linux)',
 			#	'ia64' => 'ia64 (Itanium Linux)',
-				'win32' => 'x86 (Windows) EMULATED',
+			#	'win32' => 'x86 (Windows) EMULATED',
 				'x86_2' => 'x86 dual P3 (Linux)',
 				'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
@@ -752,9 +754,9 @@ END_ACE
 				'ARM' => 'ARM (ARMv6 Linux)',
 				'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 				'MIPS' => 'MIPS (SGI IRIX)',
-				'PPC' => 'PowerPC (OS X)',
+			#	'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
-				'PIC' => 'PIC Microcontroller'
+			#	'PIC' => 'PIC Microcontroller'
 			},
 			-default=>['x64']),"\n";
 
@@ -786,6 +788,7 @@ END_ACE
 	if (1) {
 		print "Announcements:
 	<UL>
+		<li>ACE editor support (2016-02-05, thanks Noah!)
 		<li>Disqus comments for homeworks after OK! (2014-08-22)
 		<li>foo can take or return long, string, etc.  (2014-08-20)
 		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
@@ -1316,8 +1319,15 @@ const int program[]={';
 		$sr_host="olawlor";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
+	} elsif ($mach eq "skylake64") {
+	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores) <br>\n";
+		$sr_host="skylake";
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
+		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
-	print "FYI-- This is a four-core Intel Sandy Bridge i5 2400.<br>\n";
+	print "Intel Sandy Bridge i5 2400 (3.1GHz, 4 cores)<br>\n";
 		$sr_host="sandy";
 		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
