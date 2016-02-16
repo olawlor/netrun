@@ -998,6 +998,10 @@ sub create_project_directory {
 		system("cp","class/$hwnum.grd","project/netrun/grade.sh");
 	}
 	
+	# my $gpu_host="powerwall10"; # GTX 670
+	my $gpu_host="skylake"; # GTX 980 Ti
+
+
 	my $ret="int";
 	my $arg0="void";
 	my $proto="int foo(void)";
@@ -1172,8 +1176,7 @@ global foo
 		$saferun="netrun/safe_MPI.sh $numprocs ";
 	}
 	elsif ( $lang eq "CUDA") {
-		$sr_host="powerwall10";
-#		$sr_host="sandy";
+		$sr_host=$gpu_host;
 		$srcext='cu';
 		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30  -keep  $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
@@ -1184,8 +1187,7 @@ global foo
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
-		$sr_host="powerwall10";
-#		$sr_host="137.229.25.206";
+		$sr_host=$gpu_host;
 		$srcext='cpp';
 		$compiler='g++   $(CFLAGS)';
 		$linker="$compiler ";
@@ -1196,8 +1198,7 @@ global foo
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "OpenCL") {
-		$sr_host="powerwall10";
-#		$sr_host="sandy";
+		$sr_host=$gpu_host;
 		$srcext='cpp';
 		$compiler='g++   $(CFLAGS)';
 		$linker="$compiler ";
