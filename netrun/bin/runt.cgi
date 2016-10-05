@@ -78,13 +78,9 @@ chdir($userdir);
 # Download a problem tarball:
 my $tarball=$q->param('tarball');
 if ($tarball) {  
-	if ($tarball =~ /^(\w[\w.+-]+)$/ ) {
-		$tarball = $1; # Untaint
-	} else {
-		my_security("Tar name '$tarball' contains invalid characters");
-	}
+	$tarball = untaint_name($tarball);
 	print $q->header(-type  =>  'application/octet-stream',
-		-content_disposition => "attachment; filename=$tarball.tar");
+		-content_disposition => "attachment; filename='$tarball.tar'");
 	system("cat","project.tar");
 	journal("downloading $tarball");
 	exit(0);
@@ -298,11 +294,7 @@ sub saved_file_link {
 # File input
 my $file=$q->param('file');
 if ($file) {  # "file" mode: Loading up a saved input file
-	if ($file =~ /^(\w[\w.+-]+)$/ ) {
-		$file = $1; # Untaint
-	} else {
-		my_security("File name '$file' contains invalid characters");
-	}
+	$file = untaint_name($file);
 	print("Loading from file '$file'<br>\n");
 	load_file("saved/$file.sav");
 } 
@@ -1178,7 +1170,7 @@ global foo
 	elsif ( $lang eq "CUDA") {
 		$sr_host=$gpu_host;
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30  -keep  $(CFLAGS)';
+		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep  $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();  # -Wall kills it
@@ -1258,7 +1250,7 @@ END';
 		$netrun='netrun/glfp';
 	}
 	elsif ( $lang eq "glsl") {
-		$sr_host="powerwall6";
+		$sr_host="skylake";
 #		$sr_host="137.229.25.222";
 		$srcpre='// GL Shading Language version 1.0 Fragment Shader
 // Vertex/fragment shader interface
