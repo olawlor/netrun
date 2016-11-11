@@ -80,7 +80,7 @@ my $tarball=$q->param('tarball');
 if ($tarball) {  
 	$tarball = untaint_name($tarball);
 	print $q->header(-type  =>  'application/octet-stream',
-		-content_disposition => "attachment; filename='$tarball.tar'");
+		-content_disposition => "attachment; filename=$tarball.tar");
 	system("cat","project.tar");
 	journal("downloading $tarball");
 	exit(0);
