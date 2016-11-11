@@ -1,6 +1,6 @@
 #!/usr/bin/perl -Tw
-# NetRun CGI Script: for ABET, dump a directory full of .sav files
-#  Orion Sky Lawlor, olawlor@acm.org, 2005-2006 (Public domain)
+# NetRun CGI Script, with editor support
+#  Orion Sky Lawlor, olawlor@acm.org, 2005-2016 (Public domain)
 
 use strict;
 
@@ -78,11 +78,7 @@ chdir($userdir);
 # Download a problem tarball:
 my $tarball=$q->param('tarball');
 if ($tarball) {  
-	if ($tarball =~ /^(\w[\w.+-]+)$/ ) {
-		$tarball = $1; # Untaint
-	} else {
-		my_security("Tar name '$tarball' contains invalid characters");
-	}
+	$tarball = untaint_name($tarball);
 	print $q->header(-type  =>  'application/octet-stream',
 		-content_disposition => "attachment; filename=$tarball.tar");
 	system("cat","project.tar");
@@ -220,9 +216,41 @@ function startupCode() {
 	updateButton('options');
 	resizeForm();
 }
+
+//]]></script>
+
+<script src='ui/jquery-2.2.0.min.js'></script>
+<link rel='stylesheet' href='ui/jquery-ui.min.css'>
+<script src='ui/jquery-ui.min.js'></script>
+
+<style type='text/css' media='screen'>
+input, textarea, pre {
+	font-family: monospace,sans-serif,courier;
+	font-weight: 900;
+}
+
+#ace_editor_resize {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	min-width: 300px;
+	min-height: 150px;
+	border: 1px solid black;
+}
+
+#ace_editor {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+</style>
+
+<script type='text/javascript'>//<![CDATA[
+
 ",   ######### javascript ends here
-		-onLoad=>"startupCode()",
-		-style=>{'src'=>'style_default.css'});
+		-onLoad=>"startupCode()");
 
 # print $q->h1('UAF CS NetRun');
 
@@ -266,11 +294,7 @@ sub saved_file_link {
 # File input
 my $file=$q->param('file');
 if ($file) {  # "file" mode: Loading up a saved input file
-	if ($file =~ /^(\w[\w.+-]+)$/ ) {
-		$file = $1; # Untaint
-	} else {
-		my_security("File name '$file' contains invalid characters");
-	}
+	$file = untaint_name($file);
 	print("Loading from file '$file'<br>\n");
 	load_file("saved/$file.sav");
 } 
@@ -536,10 +560,70 @@ sub print_main_form {
 				-onkeypress=>"javascript:return EatTab(this,event);" 
 			),"\n";
 	}
+	my $ace_support=<<'END_ACE';
+<!-- Ace editor support: -->
 
-	print
+<div id="ace_editor_resize">
+    <div id="ace_editor"></div>
+</div>
+
+<script src="./ui/ace-min/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    // Hides textbox if Javascript is enabled
+    var old_codebox=document.getElementsByName("code")[0];
+    old_codebox.style.display = "none";
+
+    var editor = ace.edit("ace_editor");
+    editor.setTheme("ace/theme/github");
+    editor.setShowPrintMargin(false);
+    editor.setShowInvisibles(false);
+    editor.getSession().setMode("ace/mode/c_cpp");
+    editor.getSession().setUseWrapMode(false);
+    editor.getSession().setUseWorker(false);
+    editor.getSession().setUseSoftTabs(false);
+    editor.$blockScrolling=Infinity; // stupid warning
+    editor.getSession().setValue(old_codebox.value);
+
+    // Save/restore editor size using browser localStorage
+    var div_resize=$("#ace_editor_resize"); // document.getElementById("ace_editor_resize");
+    var store=window.localStorage;
+    var editsize=null;
+    if (store) { // try to load editor size from storage
+    	try { 
+	    	var str=store.getItem("editsize");
+	    	if (str) { // set initial size of div
+	    	   var editsize=JSON.parse(str);
+	    	   if (editsize.w && editsize.h) {
+		    	   div_resize.css({
+		    	   	width:editsize.w+"px",
+		    	   	height:editsize.h+"px"
+		    	   });
+		    	   editor.resize();
+	    	   }
+	    	}
+    	} catch (e) {
+    		console.log("Ignoring error restoring editor size: "+e);
+    	}
+    }
+    
+    div_resize.resizable({
+        resize: function( event, ui ) {
+          editor.resize();
+          if (store) { // try to save editor size to storage
+            var editsize={w:div_resize.width(),h:div_resize.height()};
+            var str=JSON.stringify(editsize);
+            console.log("Storing editor size as "+str);
+            store.setItem("editsize",str);
+          }
+        }
+    });
+    
+</script>
+END_ACE
+
+	print $ace_support,
 		"</TD></TR><TR><TD VALIGN=top>\n";
-	print '<div align=left><input type="submit" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
+	print '<div align=left><input type="submit" onclick="document.getElementsByName(\'code\')[0].value=editor.getSession().getValue();" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
 	
 	print
 		"<p>",
@@ -623,44 +707,48 @@ sub print_main_form {
 		"<p>Machine:",
 		$q->popup_menu(-name=>'mach',
 			-values=>[
-				'x64',
+				'skylake64',
 				'sandy64',
 				'phenom64',
-				'x86_2core',
+				'x64',
 				'x86',
+			#	'x86_2core',
 			#	'x86_atom',
 			#	'x86_4core',
 			#	'ia64',
-				'win32',
+			#	'win32',
 				'x86_2',
 				'486',
 			#	'Alpha',
 				'ARM',
+				'ARMpi2',
 				'SPARC',
 				'MIPS',
-				'PPC',
+			#	'PPC',
 			#	'PPC_EMU',
-				'PIC'
+			#	'PIC'
 			],
 			-labels=>{
-				'x64' => 'x86_64 Q6600 x4',
+				'skylake64' => 'x86_64 Skylake x4',
 				'sandy64' => 'x86_64 Sandy Bridge x4',
 				'phenom64' => 'x86_64 Phenom II x6',
+				'x64' => 'x86_64 Q6600 x4',
 				'x86' => 'x86 P4 x2',
-				'x86_atom' => 'x86 Atom x1',
-				'x86_2core' => 'x86 Core2 x2',
+			#	'x86_atom' => 'x86 Atom x1',
+			#	'x86_2core' => 'x86 Core2 x2',
 			#	'x86_4core' => 'x86  (Linux)',
 			#	'ia64' => 'ia64 (Itanium Linux)',
-				'win32' => 'x86 (Windows) EMULATED',
+			#	'win32' => 'x86 (Windows) EMULATED',
 				'x86_2' => 'x86 dual P3 (Linux)',
 				'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
+				'ARMpi2' => 'ARM (Raspberry Pi 2)',
 				'ARM' => 'ARM (ARMv6 Linux)',
 				'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 				'MIPS' => 'MIPS (SGI IRIX)',
-				'PPC' => 'PowerPC (OS X)',
+			#	'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
-				'PIC' => 'PIC Microcontroller'
+			#	'PIC' => 'PIC Microcontroller'
 			},
 			-default=>['x64']),"\n";
 
@@ -692,6 +780,7 @@ sub print_main_form {
 	if (1) {
 		print "Announcements:
 	<UL>
+		<li>ACE editor support (2016-02-05, thanks Noah!)
 		<li>Disqus comments for homeworks after OK! (2014-08-22)
 		<li>foo can take or return long, string, etc.  (2014-08-20)
 		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
@@ -901,6 +990,10 @@ sub create_project_directory {
 		system("cp","class/$hwnum.grd","project/netrun/grade.sh");
 	}
 	
+	# my $gpu_host="powerwall10"; # GTX 670
+	my $gpu_host="skylake"; # GTX 980 Ti
+
+
 	my $ret="int";
 	my $arg0="void";
 	my $proto="int foo(void)";
@@ -946,7 +1039,7 @@ sub create_project_directory {
 			push(@cflags,"-fomit-frame-pointer");
 	        }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++-4.2 -fopenmp -msse3 $(CFLAGS)';}
-		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -msse3 -std=c++0x $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -std=c++0x $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -961,8 +1054,7 @@ sub create_project_directory {
 #include <map>
 #include <string>
 #include "lib/inc.h"
-using namespace std; /* ONLY for 202 examples... */
-//using std::cout; using std::cin; using std::endl; /* <- avoid annoyance; Gaddis textbook compatibility */
+using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code */
 
 ' . $gradecode;
 		if ($mode eq 'main') { # whole program, with headers
@@ -1076,19 +1168,18 @@ global foo
 		$saferun="netrun/safe_MPI.sh $numprocs ";
 	}
 	elsif ( $lang eq "CUDA") {
-		$sr_host="powerwall0";
-#		$sr_host="sandy";
+		$sr_host=$gpu_host;
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc   -keep --opencc-options -LIST:source=on   $(CFLAGS)';
+		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep  $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
 		$disassembler="cat code.ptx; echo ";
-		# @cflags=();
+		# @cflags=();  # -Wall kills it
+		@cflags = grep { $_ != "-Wall" } @cflags;
 		$srcflag="-c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
-		$sr_host="powerwall0";
-#		$sr_host="137.229.25.206";
+		$sr_host=$gpu_host;
 		$srcext='cpp';
 		$compiler='g++   $(CFLAGS)';
 		$linker="$compiler ";
@@ -1099,17 +1190,14 @@ global foo
 		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "OpenCL") {
-		$sr_host="powerwall0";
-#		$sr_host="sandy";
+		$sr_host=$gpu_host;
 		$srcext='cpp';
 		$compiler='g++   $(CFLAGS)';
 		$linker="$compiler ";
 		system("cp /usr/local/include/epgpu.* project/");
 		push(@lflags,"-L/usr/local/cuda/include/"); 
 		push(@cflags,"-I/usr/local/cuda/include/");
-		push(@lflags,"/usr/lib/libglut_plain/libglut.a"); 
-		push(@lflags,"/usr/lib/libGLEW.a");
-		push(@lflags,"-lGL -lGLU -lOpenCL");
+		push(@lflags,"-L/usr/lib/x86_64-linux-gnu/ -lGL -lGLU -lGLEW -lglut -lOpenCL");
 		$compiler="$compiler -c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
@@ -1162,7 +1250,7 @@ END';
 		$netrun='netrun/glfp';
 	}
 	elsif ( $lang eq "glsl") {
-		$sr_host="powerwall6";
+		$sr_host="skylake";
 #		$sr_host="137.229.25.222";
 		$srcpre='// GL Shading Language version 1.0 Fragment Shader
 // Vertex/fragment shader interface
@@ -1224,8 +1312,15 @@ const int program[]={';
 		$sr_host="olawlor";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
+	} elsif ($mach eq "skylake64") {
+	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores) <br>\n";
+		$sr_host="skylake";
+		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
+		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
-	print "FYI-- This is a four-core Intel Sandy Bridge i5 2400.<br>\n";
+	print "Intel Sandy Bridge i5 2400 (3.1GHz, 4 cores)<br>\n";
 		$sr_host="sandy";
 		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
@@ -1290,10 +1385,13 @@ const int program[]={';
 		$sr_host="viz1";
 		$sr_port=2984;
 		$saferun="netrun/safe_arm.sh";
+		
 		$disassembler="objdump -drC";   # -M freaks out this version
 		if ( $lang eq "Assembly") { ################# GNU Assembly
 			$srcpre='
 .syntax unified  @ no #constants
+.align 2
+.code 32
 .section .text
 '. $gradecode .'
 .global foo
@@ -1304,6 +1402,30 @@ const int program[]={';
 			}
 		}
 
+		
+	} elsif ( $mach eq "ARMpi2") {
+	print "FYI-- This is an 900MHz Raspberry Pi 2 B+ (ARMv7r5)<br>\n";
+		$sr_host="lawpi2";
+		$sr_port=2983;
+		push(@cflags,"-marm");
+		if ( $lang eq "Assembly") {
+			$compiler="as -mcpu=cortex-a7 -mfpu=vfpv4 "; 
+		}
+		$disassembler="objdump -drC";   # -M freaks out this version
+		if ( $lang eq "Assembly") { ################# GNU Assembly
+			$srcpre='
+.syntax unified  @ no #constants
+.align 2
+.code 32
+.text
+'. $gradecode .'
+.global foo
+';
+			if ($mode eq 'frag') { # Subroutine fragment
+				$srcpre .="\nfoo:\n";
+				$srcpost='bx lr'; 		
+			}
+		}
 		
 	} elsif ( $mach eq "win32") {
 	print "WARNING-- Win32 machine is emulated with QEMU, and may be slow (half a minute!)<br>\n";
