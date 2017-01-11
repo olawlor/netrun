@@ -1,5 +1,5 @@
 #!/usr/bin/perl -Tw
-# Allows UAF students to set or reset their NetRun password
+# Allows UA students to set or reset their NetRun password
 #  Orion Sky Lawlor, olawlor@acm.org, 2005/09/20 (Public domain)
 
 use strict;
@@ -28,17 +28,16 @@ if (param()) {
 
 sub updatePassword {
 	my $name=param('name');
-	my $domain="uaf.edu";
+	my $domain="alaska.edu";
 	# print p,"Considering password update\n";
 	if ($name =~ /([^@]*)@(.*)/ ) {
 		#print p,"Splitting name into $1 and $2";
-		#print h2('ERROR: @ character not allowed in username!  The "@uaf.edu" is implicit!');
+		#print h2('ERROR: @ character not allowed in username!  The "@alaska.edu" is implicit!');
 		#return; # Give user another chance
 		$name=$1; # e.g., "lawlor"
 		$domain=$2; # e.g., "alaska.edu"
 	}
 
-#	if (!(($domain eq "uaf.edu") || ($domain eq "alaska.edu" ))) {
 	if (!($domain eq "alaska.edu" )) {
 		print h2("ERROR: You must use your alaska.edu email account");
 		return; # Give user another chance
@@ -100,7 +99,7 @@ To eventually reset your password use
 If you've never heard of NetRun, or you didn't request the 
 password to be reset, the following machine may be trying
 to break into your account, and you should forward this 
-message to Dr. Lawlor at lawlor\@alaska.edu or call 474-7678.
+message to Dr. Lawlor at lawlor\@alaska.edu or call 907 474-7678.
 
 Request IP address & port: $ENV{'REMOTE_ADDR'} / $ENV{'REMOTE_PORT'}
 Request browser: $ENV{'HTTP_USER_AGENT'}
@@ -123,14 +122,14 @@ Request email address: $name\@$domain
 
 print
 	start_form,
-	p,"This form allows you to automatically request a NetRun account or reset your NetRun account password.   Any UAF student is welcome to request a NetRun account.";
+	p,"This form allows you to automatically request a NetRun account or reset your NetRun account password.   Any University of Alaska student is welcome to request a NetRun account.";
 
 print
 	p,"Enter your University of Alaska email address, and press the button below: ",
 	p,textfield(-name=>'name');
 
 print p,"This button will add an account for this username, generate a random 
-password, and send an email with the password to this email address.  You must use your UAF email account (alaska.edu).";
+password, and send an email with the password to this email address.  You must use your UA email account (alaska.edu).";
 
 print
 	p,submit('Make NetRun Account');
@@ -140,7 +139,7 @@ email doesn't arrive, check your spam filter and forwarding settings,
 try a test email to yourself, or <a href=\"mailto:lawlor\@alaska.edu\">email
 Dr. Lawlor</a>";
 
-print p,"WARNING: Non-UAF email accounts are not allowed.
+print p,"WARNING: Non-UA email accounts are not allowed.
 Resetting the password on someone else's account will be considered
 a breakin attempt!";
 print pre("ip=$ENV{'REMOTE_ADDR'}; port=$ENV{'REMOTE_PORT'}; browser=$ENV{'HTTP_USER_AGENT'}");
