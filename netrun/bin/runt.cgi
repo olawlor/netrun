@@ -680,7 +680,7 @@ END_ACE
 				'spice' => 'SPICE Analog Circuit',
 				'C++0x' => 'C++11',
 				'vhdl' => 'VHDL Digital Circuit'},
-			-default=>['C++']),"\n";
+			-default=>['C++0x']),"\n";
 
 	print
 		"<p>Mode:",
@@ -979,7 +979,7 @@ sub create_project_directory {
 	my $srcflag="-c";
 	my $outflag="-o";
 	my $netrun="netrun/obj";
-	my $scriptrun='/home/netrun_scripting/chrootrun/chrootrun ';
+	my $scriptrun=""; # '/home/netrun_scripting/chrootrun/chrootrun ';
 
 	# Prepare build subdirectory
 	system("rm","-fr","project");
@@ -1051,6 +1051,8 @@ sub create_project_directory {
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <string>
 #include "lib/inc.h"
@@ -1305,7 +1307,7 @@ const int program[]={';
 	if ( $sr_host ne "" ) { # already set--nothing to do.
 		
 	} elsif ($netrun eq "netrun/scripting") { # The one scripting host
-		$sr_host="sandy"; $sr_port=2984;
+		$sr_host="skylake"; # $sr_port=2984;
 	}
 	elsif ($mach eq "x86") {
 	print "FYI-- This is a hyperthreaded 2.8GHz Intel Pentium 4 machine.<br>\n";
