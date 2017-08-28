@@ -710,7 +710,7 @@ END_ACE
 				'skylake64',
 				'sandy64',
 				'phenom64',
-				'x64',
+			#	'x64',
 				'x86',
 			#	'x86_2core',
 			#	'x86_atom',
@@ -750,7 +750,7 @@ END_ACE
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
 			#	'PIC' => 'PIC Microcontroller'
 			},
-			-default=>['x64']),"\n";
+			-default=>['skylake64']),"\n";
 
 	print
 		"<p>Compile options:",
@@ -780,14 +780,14 @@ END_ACE
 	if (1) {
 		print "Announcements:
 	<UL>
-		<li>ACE editor support (2016-02-05, thanks Noah!)
+		<li>ACE editor support (2016-02-05, thanks to Noah Betzen)
 		<li>Disqus comments for homeworks after OK! (2014-08-22)
 		<li>foo can take or return long, string, etc.  (2014-08-20)
 		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
 	</UL>
 	";
 	}
-	print "Version 2014-09-07";
+	print "Version 2017-08-27";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -949,6 +949,7 @@ sub create_project_directory {
 	if (!$lang) { $lang="Assembly"; }
 	my $mach=$q->param('mach');
 	if (!$mach) { $mach="x86"; }
+	if ( $mach == "x64" ) { $mach="skylake64"; }
 	
 	my @ocompile=$q->param('ocompile');
 	my @orun=$q->param('orun');
