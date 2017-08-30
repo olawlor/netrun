@@ -569,6 +569,7 @@ sub print_main_form {
 
 <script src="./ui/ace-min/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
+  if (ace) {
     // Hides textbox if Javascript is enabled
     var old_codebox=document.getElementsByName("code")[0];
     old_codebox.style.display = "none";
@@ -617,7 +618,7 @@ sub print_main_form {
           }
         }
     });
-    
+  }
 </script>
 END_ACE
 

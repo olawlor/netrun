@@ -89,10 +89,6 @@ You should just copy-and-paste the password from this email
 to log in to NetRun here:
 	https://lawlor.cs.uaf.edu/netrun/run
 
-If you're not using IE, and not worried about somebody stealing 
-your password from this machine, you can log in using this URL:
-	https://$name:$pw\@lawlor.cs.uaf.edu/netrun/run
-
 To eventually reset your password use
 	https://lawlor.cs.uaf.edu/netrun/pwreset
 
@@ -112,7 +108,7 @@ Request email address: $name\@$domain
 	close(SEND);
 	
 	print p,"OK-- a NetRun account is set up for $name".'@'.$domain.". ",
-		"An email will arrive shortly at this address explaining how to log in.",
+		"An email should already be at this address explaining how to log in.",
 		$config::end_page;
 	
 	exit(0);
@@ -174,7 +170,7 @@ sub generate_random_string
         my $random_string;
         foreach (1..$length_of_randomstring) 
         {
-                $random_string.=$chars[good_rand(63)];
+                $random_string.=$chars[good_rand(0+@chars)];
         }
         return $random_string;
 }
