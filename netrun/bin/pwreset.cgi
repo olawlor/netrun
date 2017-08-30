@@ -108,7 +108,7 @@ Request email address: $name\@$domain
 ";
 	close(EMAIL);
 
-	open(SEND,"cat '$dir/email' | mail -s 'NetRun Password Reset' '$name\@$domain' -- -r '$config::admin_email' |"); 
+	open(SEND,"cat '$dir/email' | mail -s 'NetRun Password Reset' -r '$config::admin_email' -- '$name\@$domain' |"); 
 	close(SEND);
 	
 	print p,"OK-- a NetRun account is set up for $name".'@'.$domain.". ",
