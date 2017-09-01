@@ -54,13 +54,16 @@ netrun/dis: netrun/obj $(USER_OBJ)
 	@netrun/run.sh "Disassemble" "" \
 		$(DISASSEMBLER) $(USER_OBJ)
 
-out.jpg:
+out.jpg: run/out.ppm
 	@convert -quality 95 run/out.ppm out.jpg
 
 netrun/image: out.jpg
 	@echo '<img src="run?imgdisp=1&reload_stupid_browser='`date +"%H%M%S%N"`'">'
 	@echo '<&@SNIP@&>'
 	@cat out.jpg
+
+
+export DISPLAY:= :0
 
 netrun/glfp: $(USER_CODE)
 	@cp $(USER_CODE) fragment.txt
@@ -85,7 +88,7 @@ netrun/python: $(USER_CODE)
 	-@netrun/run.sh "Run" "$(USER_CODE)" \
 	    netrun/safe_run.sh /root.netrun/pyrun py $(INPUT)
 
-scriptrun=/home/netrun_scripting/chrootdir/home/run
+scriptrun=run
 netrun/scripting: $(USER_CODE)
 	@rm -fr $(scriptrun); mkdir $(scriptrun); chmod 777 $(scriptrun)
 	@ln -s $(scriptrun) run; cp $(USER_CODE) run/

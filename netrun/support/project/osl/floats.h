@@ -1,8 +1,21 @@
 /**
  SSE and AVX implementation of Dr. Lawlor's "floats" class.
+
+ The basic idea is to build an operator-overloaded parallel-data
+ class, so given "floats a,b;" you can write "floats c=2.7*a+b;".
+
+ In SSE, a "floats" has 4 individual floats (see floats::n).
+ In AVX, a "floats" has 8 individual floats.
+
+ For a bigger but more full-featured implementation, see
+ Agner Fog's vector class http://www.agner.org/optimize/#vectorclass
+   with http://software-lisc.fbk.eu/avx_mathfun/ trig.
+ or Intel's Array Building Blocks (ArBB) "f32" library.
+
  Dr. Orion Lawlor, lawlor@alaska.edu, 2012-10-22 (public domain)
 */
 #ifndef __OSL_FLOATS_H__
+#include <iostream> /* for std::ostream */
 
 #if defined(__AVX__)
 /*********************** 8-float AVX version *************************/
@@ -57,7 +70,7 @@ public:
 	/* Extract one bool from our set.  index must be between 0 and 3 */
 	bool operator[](int index) const { return !!(_mm256_movemask_ps(v)&(1<<index)); }
 
-	friend ostream &operator<<(ostream &o,const bools &y) {
+	friend std::ostream &operator<<(std::ostream &o,const bools &y) {
 		for (int i=0;i<n;i++) o<<(y[i]?"true ":"false")<<" ";
 		return o;
 	}
@@ -66,6 +79,10 @@ public:
 
 /**
   Represents an entire set of float values.
+  
+CAUTION!  Storing this class in a std::vector may cause a segfault at runtime!
+The problem is std::vector doesn't do 32-byte alignment correctly.
+   use a std::vector<T,alignocator<T,32> > to prevent these crashes!
 */
 class floats {
 	__m256 v; /* 8 floating point values */
@@ -109,9 +126,10 @@ public:
 
 	/* Store to unaligned memory */
 	void store(float *ptr) const { _mm256_storeu_ps(ptr,v); }
-	/* Store with mask */
+	/* Store with mask--won't compile with new __m256i avxintrin.h
 	void store_mask(float *ptr,const bools &mask) const 
-		{ _mm256_maskstore_ps(ptr,v,mask.get()); }
+		{ _mm256_maskstore_ps(ptr,(__mm256i)mask.get(),v); }
+	*/
 	/* Store to 256-bit aligned memory (if not aligned, will segfault!) */
 	void store_aligned(float *ptr) const { _mm256_store_ps(ptr,v); }
 
@@ -122,7 +140,7 @@ public:
 	float &operator[](int index) { return ((float *)&v)[index]; }
 	float operator[](int index) const { return ((const float *)&v)[index]; }
 
-	friend ostream &operator<<(ostream &o,const floats &y) {
+	friend std::ostream &operator<<(std::ostream &o,const floats &y) {
 		for (int i=0;i<n;i++) o<<y[i]<<" ";
 		return o;
 	}
@@ -227,7 +245,7 @@ public:
 	int &operator[](int index) { return ((int *)&L)[index]; }
 	int operator[](int index) const { return ((const int *)&L)[index]; }
 	
-	friend ostream &operator<<(ostream &o,const ints &y) {
+	friend std::ostream &operator<<(std::ostream &o,const ints &y) {
 		for (int i=0;i<n;i++) o<<y[i]<<" ";
 		return o;
 	}
@@ -287,7 +305,7 @@ public:
 	/* Extract one bool from our set.  index must be between 0 and 3 */
 	bool operator[](int index) const { return !!(_mm_movemask_ps(v)&(1<<index)); }
 
-	friend ostream &operator<<(ostream &o,const bools &y) {
+	friend std::ostream &operator<<(std::ostream &o,const bools &y) {
 		for (int i=0;i<n;i++) o<<(y[i]?"true ":"false")<<" ";
 		return o;
 	}
@@ -351,7 +369,7 @@ public:
 	float &operator[](int index) { return ((float *)&v)[index]; }
 	float operator[](int index) const { return ((const float *)&v)[index]; }
 
-	friend ostream &operator<<(ostream &o,const floats &y) {
+	friend std::ostream &operator<<(std::ostream &o,const floats &y) {
 		for (int i=0;i<n;i++) o<<y[i]<<" ";
 		return o;
 	}
@@ -432,7 +450,7 @@ public:
 	int &operator[](int index) { return ((int *)&v)[index]; }
 	int operator[](int index) const { return ((const int *)&v)[index]; }
 
-	friend ostream &operator<<(ostream &o,const ints &y) {
+	friend std::ostream &operator<<(std::ostream &o,const ints &y) {
 		for (int i=0;i<n;i++) o<<y[i]<<" ";
 		return o;
 	}

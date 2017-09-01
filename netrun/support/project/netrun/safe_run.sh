@@ -13,7 +13,7 @@ then
   fi
 fi
 mkdir -p run/etc
-[ -r /etc/resolv.conf ] && cp /etc/resolv.conf run/etc/
+cp /etc/resolv.conf /etc/nsswitch.conf /etc/services /etc/hosts /etc/host.conf run/etc/  > /dev/null 2>&1
 mkdir -p run/dev
 dd if=/dev/urandom of=run/dev/urandom bs=4k count=1 > /dev/null 2>&1
 

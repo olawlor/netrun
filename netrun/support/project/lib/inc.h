@@ -40,6 +40,7 @@ CDECL NETRUN_FOO_DECL;
   WARNING: When called from assembly, may trash registers!
 */
 CDECL long read_input(void);
+CDECL float read_float(void);
 
 /**
   Read input line from the user.  Returns 1 if read OK, 0 if error or EOF.
@@ -85,6 +86,7 @@ CDECL void print_time(const char *fnName,timeable_fn fn);
 
 /********* Checksums ***************/
 CDECL int iarray_print(int *arr,int n);
+CDECL long larray_print(long *arr,long n);
 CDECL int farray_print(float *arr,int n);
 CDECL void farray_fill(float *f,int n,float tol);
 CDECL void farray_fill2(float *f,int n,float tol);

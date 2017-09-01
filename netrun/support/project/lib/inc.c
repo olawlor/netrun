@@ -12,6 +12,7 @@
 /* To avoid cluttering up the screen during timing tests... */
 int timer_only_dont_print=0;
 
+
 /* Read one input integer from the user. */
 long read_input(void) {
 	long ret=0;
@@ -30,6 +31,25 @@ long read_input(void) {
 		printf("read_input> Returning %ld (0x%X)\n",ret,(int)ret);
 	else
 		printf("read_input> Returning %ld (0x%lX)\n",ret,ret);
+	return ret;
+}
+
+
+/* Read one input float from the user. */
+float read_float(void) {
+	float ret=0;
+
+	if (timer_only_dont_print) return 0;
+	printf("Please enter a float input value:\n");
+	fflush(stdout);
+	if (1!=scanf("%f",&ret)) {
+		if (feof(stdin))
+			printf("read_float> No input to read!  Exiting...\n");
+		else
+			printf("read_float> Invalid input format!  Exiting...\n"); 
+		exit(1);
+	}
+	printf("read_float> Returning %f\n",ret);
 	return ret;
 }
 
@@ -175,6 +195,29 @@ int iarray_print(int *arr,int n)
 	return n;
 }
 
+long larray_print(long *arr,long n)
+{
+	long i=0,p;
+	if (n<0 || n>100000) {
+		printf("ERROR in larray_print: passed invalid number of elements %ld (0x%08lx) for array %p.  Did you pass the arguments in the wrong order?\n",
+			n,n,arr);
+		exit(1);
+	}
+	if (timer_only_dont_print) return n;
+	p=n;
+	if (p>10) p=10; /* Only print first 10 elements */
+	printf("larray_print: %ld elements\n",n);
+	for (i=0;i<p;i++)
+		printf("  arr[%ld]=%ld  (0x%08lx)\n",i,arr[i],arr[i]);
+	if (p<n) {
+		i=n/2;
+		printf("  arr[%ld]=%ld  (0x%08lx)\n",i,arr[i],arr[i]);
+		i=n-1;
+		printf("  arr[%ld]=%ld  (0x%08lx)\n",i,arr[i],arr[i]);
+	}
+	return n;
+}
+
 int farray_print(float *arr,int n)
 {
 	int i=0,p;
@@ -249,4 +292,76 @@ void cat(const char *fName) {
 	printf("-- end of %s --\n",fName);
 	fclose(f);
 }
+
+/********* TraceASM support ******************/
+#define machine_registers 16
+struct machine_state {
+	long regs[machine_registers];
+	float xmm[machine_registers][4];
+	long flags;
+	long padding1;
+};
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+void TraceASM_cside(long line,const char *code,struct machine_state *state,long state_bytes)
+{
+	static const char *reg_names[machine_registers]={
+		"rax","rcx","rdx","rbx",
+		"rsp","rbp","rsi","rdi",
+		"r8","r9","r10","r11",
+		"r12","r13","r14","r15"
+	};
+	int i;
+	static struct machine_state last;
+	int nprinted=0;
+	char flags[10];
+	
+	if (state_bytes!=sizeof(struct machine_state)) {
+		printf("Error: machine state size mismatch, got %ld expected %ld",
+			(long)state_bytes,(long)sizeof(struct machine_state));
+		return;
+	}
+	
+	// Decode x86 EFLAGS register
+	if (state->flags & (1<< 0)) flags[0]='C'; else flags[0]='c'; // carry
+	if (state->flags & (1<< 2)) flags[1]='P'; else flags[1]='p'; // parity
+	if (state->flags & (1<< 6)) flags[2]='Z'; else flags[2]='z'; // zero
+	if (state->flags & (1<< 7)) flags[3]='S'; else flags[3]='s'; // sign
+	if (state->flags & (1<<11)) flags[4]='O'; else flags[4]='o'; // overflow
+	flags[5]=0;
+	
+	if (line>0)
+		printf("TraceASM %3ld  %-30s    %s   ",line,code,flags);
+	
+	// Dump any changed registers
+	for (i=0;i<machine_registers;i++) {
+		long v=state->regs[i];
+		if (v!=last.regs[i]) {
+			if (line>0) {
+				// separator from previous print:
+				if (nprinted>0) printf(",  ");
+				
+				if (i==4) // rsp changes printed relative
+				{
+					long diff=v-last.regs[i];
+					printf("%s%s=%ld",reg_names[i],
+						diff>0?"+":"-",
+						diff>0?diff:-diff);
+				}
+				else { // ordinary register
+					printf("%s=%ld (0x%lX)",reg_names[i],
+						v,v);
+				}
+				nprinted++;
+			}
+			last.regs[i]=v;
+		}
+	}
+	
+	if (line>0)
+		printf("\n");
+}
+
 

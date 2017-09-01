@@ -97,7 +97,7 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	unsigned long pc=0,  bp=0, sp=0;
 	if (in_signal++>0) exit(98); /* Don't just loop forever on signals... */
 	printf("-------------------\n");
-	printf("Caught signal signal %s (#%d)\n",sig2name(sig),sig);
+	printf("Caught signal %s (#%d)\n",sig2name(sig),sig);
 
 #if defined(__amd64__) /* x86-64 */
 	{
@@ -124,10 +124,10 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	{
 	struct ucontext *uc=(struct ucontext *)ucontextv;
 	struct sigcontext *r=(struct sigcontext *)(&uc->uc_mcontext);
-	printf("Registers:  eip=0x%08x\n"
-		"  eax=0x%08x  ebx=0x%08x  ecx=0x%08x   edx=0x%08x\n"
-		"  esp=0x%08x  ebp=0x%08x  esi=0x%08x   edi=0x%08x\n"
-		"  eflags=0x%08x\n",
+	printf("Registers:  eip=0x%08lx\n"
+		"  eax=0x%08lx  ebx=0x%08lx  ecx=0x%08lx   edx=0x%08lx\n"
+		"  esp=0x%08lx  ebp=0x%08lx  esi=0x%08lx   edi=0x%08lx\n"
+		"  eflags=0x%08lx\n",
 		r->eip,
 		r->eax,r->ebx,r->ecx,r->edx,
 		r->esp_at_signal,r->ebp,r->esi,r->edi,
@@ -154,6 +154,26 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	bp=*(unsigned long *)(r->gpr[1]);
 	sp=r->gpr[1];
 	}
+#elif defined(__arm__) 
+	if (0) printf("ARM machine detected\n");
+	struct ucontext *uc=(struct ucontext *)ucontextv;
+	if (0) printf("ucontext: %p\n",uc);
+	struct sigcontext *mc=(struct sigcontext *)(&uc->uc_mcontext);
+	if (0) printf("sigcontext: %p\n",mc);
+#define preg "0x%08lx "
+	unsigned long *regs=&mc->arm_r0;
+	printf("ARM Registers: pc=" preg " lr=" preg "  sp=" preg "\n",
+		regs[15],regs[14],regs[13]);
+	for (int i=0;i<16;i++)
+		printf("r%d%s = " preg "%s",
+			i, // register i
+			i<10?" ":"", // add space after single-digit regs, to align print
+			regs[i], // register value
+			i%4==3?"\n":"" // break up lines
+		);
+	pc=regs[15];
+	sp=regs[13];
+	bp=sp+20;
 #else
 	printf("Unknown machine-- cannot dump registers...\n");
 #endif

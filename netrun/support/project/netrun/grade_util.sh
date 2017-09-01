@@ -9,7 +9,8 @@ desc="CS Problem $HWNUM"
 # Run "$prog" for input "$in".
 #  Exits on errors.
 run_prog() {
-echo "$in" | $prog > $0.out 2>&1
+echo "$in" | $prog > $0.out.orig 2>&1
+grep -v TraceASM $0.out.orig > $0.out
 res="$?"
 if [ $res -ne 0 ]
 then
@@ -17,7 +18,7 @@ then
 	echo "Program exited with error $res for input:"
 	echo "$in" | netrun/filter_htmlpre.pl
 	echo "The output up to the error was:"
-	cat $0.out | netrun/filter_htmlpre.pl	
+	cat $0.out.orig | netrun/filter_htmlpre.pl	
 	echo '</TD></TR></TABLE>'
 	exit 1
 fi
