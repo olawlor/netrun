@@ -950,7 +950,7 @@ sub create_project_directory {
 	if (!$lang) { $lang="Assembly"; }
 	my $mach=$q->param('mach');
 	if (!$mach) { $mach="x86"; }
-	if ( $mach == "x64" ) { $mach="skylake64"; }
+	if ( $mach eq "x64" ) { $mach="skylake64"; }
 	
 	my @ocompile=$q->param('ocompile');
 	my @orun=$q->param('orun');
