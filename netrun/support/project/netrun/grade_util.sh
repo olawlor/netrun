@@ -11,17 +11,6 @@ desc="CS Problem $HWNUM"
 run_prog() {
 echo "$in" | $prog > $0.out.orig 2>&1
 grep -v TraceASM $0.out.orig > $0.out
-res="$?"
-if [ $res -ne 0 ]
-then
-	echo '<TABLE><TR><TD BGCOLOR="#ff8888">'
-	echo "Program exited with error $res for input:"
-	echo "$in" | netrun/filter_htmlpre.pl
-	echo "The output up to the error was:"
-	cat $0.out.orig | netrun/filter_htmlpre.pl	
-	echo '</TD></TR></TABLE>'
-	exit 1
-fi
 }
 
 
