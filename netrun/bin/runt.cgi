@@ -1712,7 +1712,7 @@ const int program[]={';
 	
 	# Write their input data
 	my $input="";
-	if ($q->param('input')) {
+	if (length $q->param('input')) {
 		$input="< input.txt";
 		open(INPUT,">project/input.txt");
 		my $inputdata=$q->param('input');
