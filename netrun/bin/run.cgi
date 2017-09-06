@@ -320,7 +320,7 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	}
 	my $reset=$q->param('reset');
 
-	print("Loading homework '$hw'\n");
+	print("Loading homework $hw.\n");
 	load_file("class/$hw.sav");
 
 	# Stash the homework number in a hidden "hwnum" field.  This isn't ideal, frankly.
@@ -330,7 +330,15 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	if ( -r "saved/$name.sav" ) {
 	# Already have a saved homework with this name!  Use it instead
 		if ("$reset" ne "1") {
+			print("Resuming saved homework $name. <br>");
+			my $oldq=$q;
 			load_file("saved/$name.sav");
+			my $newhw=$q->param('hwnum');
+			if ($newhw ne $hw) 
+			{ # Saved homework is not the one we're trying to load
+				print("Saved homework $newhw does not match $hw, doing clean reset. <br>");
+				$q=$oldq;
+			}
 		} else { # Reset to factory defaults
 			print("<p>Clean reset to original instructor's starting code.");
 		}
@@ -788,7 +796,7 @@ END_ACE
 	</UL>
 	";
 	}
-	print "Version 2017-08-27";
+	print "Version 2017-09-06";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
