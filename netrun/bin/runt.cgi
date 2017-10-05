@@ -219,9 +219,23 @@ function startupCode() {
 
 //]]></script>
 
+
+<!-- jquery is used for resizing the ace editor area -->
 <script src='ui/jquery-2.2.0.min.js'></script>
 <link rel='stylesheet' href='ui/jquery-ui.min.css'>
 <script src='ui/jquery-ui.min.js'></script>
+
+
+<!-- Global Site Tag (gtag.js) - Google Analytics -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=UA-106859486-1'></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments)};
+  gtag('js', new Date());
+
+  gtag('config', 'UA-106859486-1');
+</script>
+
 
 <style type='text/css' media='screen'>
 input, textarea, pre {
