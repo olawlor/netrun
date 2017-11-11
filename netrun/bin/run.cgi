@@ -276,6 +276,7 @@ if ($rel_url eq "runa") { # ABET printing
   if ($dir =~ /^([\w]+[\w\/]*)$/) {
 	$dir=$1; # Looks OK-- untaint it.
 	foreach my $hw (<$userdir/saved/$dir/*.sav>) {
+		print $q->h2("Loading " . $hw);
 		&load_file($hw);
 		&print_main_form();
 		&compile_and_run();
@@ -733,7 +734,7 @@ END_ACE
 				'skylake64',
 				'sandy64',
 				'phenom64',
-			#	'x64',
+				'x64',
 				'x86',
 			#	'x86_2core',
 			#	'x86_atom',
@@ -871,8 +872,9 @@ sub compile_and_run {
 		journal("hwok $hw_und");
 		system("cp","$proj->{src}","hw/$hw_und");
 		
-		
-		print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
+		if ($rel_url ne "runa") { 
+	
+			print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
     <div id="disqus_thread"></div>
     <script type="text/javascript">
         /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
@@ -887,6 +889,7 @@ sub compile_and_run {
     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 ';
+		}
 	}
 }
 
@@ -1003,7 +1006,7 @@ sub create_project_directory {
 	my $srcflag="-c";
 	my $outflag="-o";
 	my $netrun="netrun/obj";
-	my $scriptrun=""; # '/home/netrun_scripting/chrootrun/chrootrun ';
+	my $scriptrun='/home/netrun_gpu/scriptrun ';
 
 	# Prepare build subdirectory
 	system("rm","-fr","project");
