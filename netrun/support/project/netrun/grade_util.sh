@@ -113,7 +113,7 @@ grade_perf() {
 		exit 1
 	fi
 	tperf=`grep "$time_sub:" $0.out | awk '{print $2}'`
-	perf=`grep "$time_sub:" $0.out | awk '{if ($2<'$t') print("fast");}'`
+	perf=`grep "$time_sub:" $0.out | awk '{if ($2>'$t') print("slow"); } END {print("fast");}'`
 	if [ ! "$perf" = "fast" ]
 	then
 		echo "Sorry, $time_sub is still too slow-- $time_sub should run in $t ns/call or less; but it actually ran in $tperf ns/call.<br>"

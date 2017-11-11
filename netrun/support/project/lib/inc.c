@@ -293,6 +293,53 @@ void cat(const char *fName) {
 	fclose(f);
 }
 
+/* Print a byte in binary */
+void print_binary(long value) {
+	for (int bit=7;bit>=0;bit--) {
+		if (value & (1<<bit)) printf("1");
+		else printf("0");
+		if (bit==4 || bit==0) printf(" ");
+	}
+}
+
+/* Print data at pointer as raw bits. */
+void dump_binary(const void *ptr,long nbits)
+{
+	long nbytes=(nbits+7)/8;
+	printf("dump_binary(%p, %ld bits): \n  ",ptr,nbits);
+	for (long i=0;i<nbytes;i++) {
+		print_binary(((const unsigned char *)ptr)[i]);
+		printf(" ");
+		if (i%8==7 && i!=nbytes-1) printf("\n  ");
+	}
+	printf("\n");
+}
+
+/* Print data at pointer as raw hex digits. */
+void dump_hex(const void *ptr,long nbits)
+{
+	long nbytes=(nbits+7)/8;
+	printf("dump_hex   (%p, %ld bits): \n  ",ptr,nbits);
+	for (long i=0;i<nbytes;i++) {
+		printf("%02x ",((const unsigned char *)ptr)[i]);
+		if (i%8==7) printf(" ");
+		if (i%32==31 && i!=nbytes-1) printf("\n  ");
+	}
+	printf("\n");
+}
+
+/* Print data at pointer as raw chars. */
+void dump_ascii(const void *ptr,long nbits)
+{
+	long nbytes=(nbits+7)/8;
+	printf("dump_ascii (%p, %ld bits): ",ptr,nbits);
+	for (long i=0;i<nbytes;i++) {
+		printf("%c",((const char *)ptr)[i]);
+	}
+	printf("\n");
+}
+
+
 /********* TraceASM support ******************/
 #define machine_registers 16
 struct machine_state {
@@ -317,6 +364,8 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 	static struct machine_state last;
 	int nprinted=0;
 	char flags[10];
+
+	if (timer_only_dont_print) return;
 	
 	if (state_bytes!=sizeof(struct machine_state)) {
 		printf("Error: machine state size mismatch, got %ld expected %ld",

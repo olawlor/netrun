@@ -35,6 +35,14 @@ inline void *netrun_allocate_mystery_size(void) {
 #endif
 CDECL NETRUN_FOO_DECL;
 
+/* Print data in memory at this pointer as raw bits. */
+CDECL void dump_binary(const void *ptr,long nbits);
+/* Print data in memory at this pointer as raw hex digits. */
+CDECL void dump_hex(const void *ptr,long nbits);
+/* Print data in memory at this pointer as raw chars. */
+CDECL void dump_ascii(const void *ptr,long nbits);
+
+
 /**
   Read one input integer from the user. 
   WARNING: When called from assembly, may trash registers!
