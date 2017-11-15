@@ -45,24 +45,24 @@ inline vec4 max(const vec4 &a,const vec4 &b) {
 
 #include "vector3d.h"
 typedef osl::Vector3dT<float> vec3;
-inline vec3 normalize(const vec3 &v) {return v.dir();}
-inline float dot(const vec3 &a,const vec3 &b) {return a.dot(b);}
-inline float length(const vec3 &a) {return a.mag();}
-inline vec3 reflect(const vec3 &I,const vec3 &N) 
+inline CUDA_BOTH_VEC vec3 normalize(const vec3 &v) {return v.dir();}
+inline CUDA_BOTH_VEC float dot(const vec3 &a,const vec3 &b) {return a.dot(b);}
+inline CUDA_BOTH_VEC float length(const vec3 &a) {return a.mag();}
+inline CUDA_BOTH_VEC vec3 reflect(const vec3 &I,const vec3 &N) 
 	{return I-2.0*dot(N,I)*N;}
 
 /// Allow "vec*vec" to compile:
-inline vec3 operator*(const vec3 &a,const vec3 &b) {return vec3(a.x*b.x,a.y*b.y,a.z*b.z);}
+inline CUDA_BOTH_VEC vec3 operator*(const vec3 &a,const vec3 &b) {return vec3(a.x*b.x,a.y*b.y,a.z*b.z);}
 
-inline vec3 mix(const vec3 &a,const vec3 &b,float f) {return a+f*(b-a);}
-inline vec3 min(const vec3 &a,const vec3 &b) {
+inline CUDA_BOTH_VEC vec3 mix(const vec3 &a,const vec3 &b,float f) {return a+f*(b-a);}
+inline CUDA_BOTH_VEC vec3 min(const vec3 &a,const vec3 &b) {
 	vec3 ret=a;
 	for (int axis=0;axis<3;axis++) {
 		if (ret[axis]>b[axis]) ret[axis]=b[axis];
 	}
 	return ret;
 }
-inline vec3 max(const vec3 &a,const vec3 &b) {
+inline CUDA_BOTH_VEC vec3 max(const vec3 &a,const vec3 &b) {
 	vec3 ret=a;
 	for (int axis=0;axis<3;axis++) {
 		if (ret[axis]<b[axis]) ret[axis]=b[axis];

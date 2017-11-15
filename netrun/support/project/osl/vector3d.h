@@ -16,6 +16,13 @@ Most routines are provided right in the header file (for inlining).
 
 #include <math.h> /* for sqrt */
 
+/* Allow vec3 to be used on either host (CPU) or device (GPU). */
+#ifdef __CUDACC__
+# define CUDA_BOTH_VEC __host__ __device__
+#else
+# define CUDA_BOTH_VEC
+#endif
+
 #ifdef __CHARMC__ /* for migration */
 #  include "pup.h"
 #endif
@@ -31,74 +38,74 @@ class Vector3dT {
 	typedef Vector3dT<real> vec;
 public:
 	real x,y,z;
-	Vector3dT(void) {}//Default consructor
+	CUDA_BOTH_VEC Vector3dT(void) {}//Default consructor
 	/// Simple 1-value constructors
-	explicit Vector3dT(int init) {x=y=z=(real)init;}
-	explicit Vector3dT(float init) {x=y=z=(real)init;}
-	explicit Vector3dT(double init) {x=y=z=(real)init;}
+	CUDA_BOTH_VEC explicit Vector3dT(int init) {x=y=z=(real)init;}
+	CUDA_BOTH_VEC explicit Vector3dT(float init) {x=y=z=(real)init;}
+	CUDA_BOTH_VEC explicit Vector3dT(double init) {x=y=z=(real)init;}
 	
 	/// 3-value constructor
-	Vector3dT(const real Nx,const real Ny,const real Nz) {x=Nx;y=Ny;z=Nz;}
+	CUDA_BOTH_VEC Vector3dT(const real Nx,const real Ny,const real Nz) {x=Nx;y=Ny;z=Nz;}
 	/// real array constructor
-	Vector3dT(const real *arr) {x=arr[0];y=arr[1];z=arr[2];}
+	CUDA_BOTH_VEC Vector3dT(const real *arr) {x=arr[0];y=arr[1];z=arr[2];}
 
 	/// Constructors from other types of Vector:
-	Vector3dT(const Vector3dT<float> &src) 
+	CUDA_BOTH_VEC Vector3dT(const Vector3dT<float> &src) 
 	  {x=(real)src.x; y=(real)src.y; z=(real)src.z;}
-	Vector3dT(const Vector3dT<double> &src) 
+	CUDA_BOTH_VEC Vector3dT(const Vector3dT<double> &src) 
 	  {x=(real)src.x; y=(real)src.y; z=(real)src.z;}
-	Vector3dT(const Vector3dT<int> &src) 
+	CUDA_BOTH_VEC Vector3dT(const Vector3dT<int> &src) 
 	  {x=(real)src.x; y=(real)src.y; z=(real)src.z;}
 
 	// Copy constructor & assignment operator are by default
 	
 	/// This lets you typecast a vector to a real array
-	operator real *() {return (real *)&x;}
-	operator const real *() const {return (const real *)&x;}
+	CUDA_BOTH_VEC operator real *() {return (real *)&x;}
+	CUDA_BOTH_VEC operator const real *() const {return (const real *)&x;}
 
 //Basic mathematical operators	
-	int operator==(const vec &b) const {return (x==b.x)&&(y==b.y)&&(z==b.z);}
-	int operator!=(const vec &b) const {return (x!=b.x)||(y!=b.y)||(z!=b.z);}
-	vec operator+(const vec &b) const {return vec(x+b.x,y+b.y,z+b.z);}
-	vec operator-(const vec &b) const {return vec(x-b.x,y-b.y,z-b.z);}
-	vec operator*(const real scale) const 
+	CUDA_BOTH_VEC int operator==(const vec &b) const {return (x==b.x)&&(y==b.y)&&(z==b.z);}
+	CUDA_BOTH_VEC int operator!=(const vec &b) const {return (x!=b.x)||(y!=b.y)||(z!=b.z);}
+	CUDA_BOTH_VEC vec operator+(const vec &b) const {return vec(x+b.x,y+b.y,z+b.z);}
+	CUDA_BOTH_VEC vec operator-(const vec &b) const {return vec(x-b.x,y-b.y,z-b.z);}
+	CUDA_BOTH_VEC vec operator*(const real scale) const 
 		{return vec(x*scale,y*scale,z*scale);}
-	vec operator/(const real &div) const
+	CUDA_BOTH_VEC vec operator/(const real &div) const
 		{real scale=1.0/div;return vec(x*scale,y*scale,z*scale);}
-	vec operator-(void) const {return vec(-x,-y,-z);}
-	void operator+=(const vec &b) {x+=b.x;y+=b.y;z+=b.z;}
-	void operator-=(const vec &b) {x-=b.x;y-=b.y;z-=b.z;}
-	void operator*=(const real scale) {x*=scale;y*=scale;z*=scale;}
-	void operator/=(const real div) {real scale=1.0/div;x*=scale;y*=scale;z*=scale;}
+	CUDA_BOTH_VEC vec operator-(void) const {return vec(-x,-y,-z);}
+	CUDA_BOTH_VEC void operator+=(const vec &b) {x+=b.x;y+=b.y;z+=b.z;}
+	CUDA_BOTH_VEC void operator-=(const vec &b) {x-=b.x;y-=b.y;z-=b.z;}
+	CUDA_BOTH_VEC void operator*=(const real scale) {x*=scale;y*=scale;z*=scale;}
+	CUDA_BOTH_VEC void operator/=(const real div) {real scale=1.0/div;x*=scale;y*=scale;z*=scale;}
 
 //Vector-specific operations
 	/// Return the square of the magnitude of this vector
-	real magSqr(void) const {return x*x+y*y+z*z;}
+	CUDA_BOTH_VEC real magSqr(void) const {return x*x+y*y+z*z;}
 	/// Return the magnitude (length) of this vector
-	real mag(void) const {return sqrt(magSqr());}
+	CUDA_BOTH_VEC real mag(void) const {return sqrt(magSqr());}
 	
 	/// Return the square of the distance to the vector b
-	real distSqr(const vec &b) const 
+	CUDA_BOTH_VEC real distSqr(const vec &b) const 
 		{return (x-b.x)*(x-b.x)+(y-b.y)*(y-b.y)+(z-b.z)*(z-b.z);}
 	/// Return the distance to the vector b
-	real dist(const vec &b) const {return sqrt(distSqr(b));}
+	CUDA_BOTH_VEC real dist(const vec &b) const {return sqrt(distSqr(b));}
 	
 	/// Return the dot product of this vector and b
-	real dot(const vec &b) const {return x*b.x+y*b.y+z*b.z;}
+	CUDA_BOTH_VEC real dot(const vec &b) const {return x*b.x+y*b.y+z*b.z;}
 	/// Return the cosine of the angle between this vector and b
-	real cosAng(const vec &b) const {return dot(b)/(mag()*b.mag());}
+	CUDA_BOTH_VEC real cosAng(const vec &b) const {return dot(b)/(mag()*b.mag());}
 	
 	/// Return the "direction" (unit vector) of this vector
-	vec dir(void) const {return (*this)/mag();}
+	CUDA_BOTH_VEC vec dir(void) const {return (*this)/mag();}
 	/// Return the right-handed cross product of this vector and b
-	vec cross(const vec &b) const {
+	CUDA_BOTH_VEC vec cross(const vec &b) const {
 		return vec(y*b.z-z*b.y,z*b.x-x*b.z,x*b.y-y*b.x);
 	}
 	/// Make this vector have unit length
-	void normalize(void) { *this=this->dir();}
+	CUDA_BOTH_VEC void normalize(void) { *this=this->dir();}
 	
 	/// Return the largest coordinate in this vector
-	real max(void) const {
+	CUDA_BOTH_VEC real max(void) const {
 		real big=x;
 		if (big<y) big=y;
 		if (big<z) big=z;
@@ -106,7 +113,7 @@ public:
 	}
 	/// Make each of this vector's coordinates at least as big
 	///  as the given vector's coordinates.
-	void enlarge(const vec &by) {
+	CUDA_BOTH_VEC void enlarge(const vec &by) {
 		if (x<by.x) x=by.x;
 		if (y<by.y) y=by.y;
 		if (z<by.z) z=by.z;     
@@ -118,14 +125,17 @@ public:
 
 /** Utility wrapper routines */
 template<class real>
+CUDA_BOTH_VEC
 inline real dist(const Vector3dT<real> &a,const Vector3dT<real> &b)
 	{ return a.dist(b); }
 
 template<class real>
+CUDA_BOTH_VEC
 inline real dot(const Vector3dT<real> &a,const Vector3dT<real> &b)
 	{ return a.dot(b); }
 
 template<class real>
+CUDA_BOTH_VEC
 inline Vector3dT<real> cross(const Vector3dT<real> &a,const Vector3dT<real> &b)
 	{ return a.cross(b); }
 
@@ -135,6 +145,7 @@ typedef Vector3dT<int> Vector3i;
 
 /// Allow "3.0*vec" to compile:
 template <class scalar_t,class real>
+CUDA_BOTH_VEC
 inline Vector3dT<real> operator*(const scalar_t scale,const Vector3dT<real> &v)
 		{return Vector3dT<real>(v.x*scale,v.y*scale,v.z*scale);}
 
