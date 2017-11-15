@@ -1059,7 +1059,7 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "OpenMP") {  ############# C++
+	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
@@ -1091,7 +1091,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre=$srcpre . $proto . " {\n";
 			$srcpost="\n;";
-			if ($ret ne "void") { $srcpost .= "\n  return 0;"; }
+		#	if ($ret ne "void") { $srcpost .= "\n  return 0;"; }
 			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
@@ -1371,17 +1371,6 @@ section .text
 
 		$saferun="netrun/safe_MPI.sh $numprocs ";
 	}
-	elsif ( $lang eq "CUDA") {
-		$sr_host=$gpu_host;
-		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep  $(CFLAGS)';
-		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
-		$disassembler="cat code.ptx; echo ";
-		# @cflags=();  # -Wall kills it
-		@cflags = grep { $_ != "-Wall" } @cflags;
-		$srcflag="-c";
-		$saferun="netrun/safe_CUDA.sh ";
-	}
 	elsif ( $lang eq "GPGPU") {
 		$sr_host=$gpu_host;
 		$srcext='cpp';
@@ -1501,6 +1490,104 @@ const int program[]={';
 	else {
 		security_err("Invalid language '$lang'");
 	}
+
+
+	if ( $lang eq "CUDA") {
+		$sr_host=$gpu_host;
+		if ($mode ne 'main') { # add headers and gpu_vec:
+			$srcpre='#include <cuda.h>
+#include <vector>
+#include <iostream>
+
+/* Lawlor NetRun CUDA utility functions: */
+#define gpu_check(cudacall) { int err=cudacall; if (err!=cudaSuccess) { std::cout<<"CUDA ERROR "<<err<<" at line "<<__LINE__<<": "<<#cudacall<<"\n"; exit(1); } }
+
+/* CPU side class to represent an array in GPU memory */
+template <class T>
+class gpu_vec {
+	T *ptr; // points to GPU memory
+	unsigned long len; // number of T elements allocated
+public:
+	// Make a null vector
+	gpu_vec() :ptr(0), len(0) {}
+	// Make an empty (uninitialized) vector of this length
+	gpu_vec(unsigned long size) :ptr(0),len(size) {
+		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
+	}
+	// Copy from this CPU-side vector
+	gpu_vec(const std::vector<T> &vec) :ptr(0),len(vec.size()) {
+		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
+		copy_from(vec);
+	}
+	// Deallocate the GPU data
+	~gpu_vec() {
+		if (ptr) gpu_check(cudaFree(ptr));
+		ptr=0; len=0;
+	}
+	
+	// Return the length of our vector
+	unsigned long size() const { return len; }
+	
+	// Silently convert to a GPU T pointer.  
+	//  This is useful for calling GPU kernels.
+	//  It is NOT useful for accessing the data on the CPU side.
+	operator T* (void) const { return ptr; }
+	
+	// Explicit memcpy to pull separate elements out.
+	//   CAUTION: this is fairly slow; assign to a vector if you need lots of elements.
+	const T operator[](unsigned long idx) const {
+		T ret;
+		gpu_check(cudaMemcpy(&ret,&ptr[idx],sizeof(T),cudaMemcpyDeviceToHost));
+		return ret;
+	}
+	// Copy data from the GPU to this CPU side std::vector
+	void copy_to(std::vector<T> &vec) const {
+		vec.resize(len);
+		gpu_check(cudaMemcpy(&vec[0],&ptr[0],len*sizeof(T),cudaMemcpyDeviceToHost));
+	}
+	
+	// Copy data from this CPU side std::vector onto the GPU
+	void copy_from(const std::vector<T> &vec) {
+		assert(len==vec.size());
+		gpu_check(cudaMemcpy(&ptr[0],&vec[0],len*sizeof(T),cudaMemcpyHostToDevice));
+	}
+	
+private:
+	// if gpuvec gets copied, the pointer will get freed twice, so do not allow copying.
+	gpu_vec(const gpu_vec<T> &g);
+	void operator=(const gpu_vec<T> &g);
+};
+
+/* Zero-initialize GPU memory (to avoid weird "output never changes" bugs) */
+__global__ void gpu_mem_clear(int *mem) { 
+	mem[threadIdx.x+blockIdx.x*blockDim.x]=0; 
+}
+class gpu_mem_clear_at_startup { public:
+	gpu_mem_clear_at_startup() {
+		int n=10000000;
+		gpu_vec<int> mem(n);
+		gpu_mem_clear<<< n/256, 256 >>>(mem);
+		gpu_check(cudaDeviceSynchronize());
+	}
+} gpu_mem_clear_at_startup_singleton;
+
+
+
+/* padding here so total NetRun additions are 100 lines: so error on line 123 -> web line 23 */
+
+
+' . $srcpre;
+		}
+		$srcext='cu';
+		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
+		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
+		$disassembler="cat code.ptx; echo ";
+		# @cflags=();  # -Wall kills it
+		@cflags = grep { $_ ne "-Wall" and $_ ne "-fomit-frame-pointer" } @cflags;
+		$srcflag="-c";
+		$saferun="netrun/safe_CUDA.sh ";
+	}
+
 	if ( $srcpost eq "") {
 		$srcpost = $srcpost . $gradepost;
 	}
