@@ -1496,6 +1496,7 @@ const int program[]={';
 		$sr_host=$gpu_host;
 		if ($mode ne 'main') { # add headers and gpu_vec:
 			$srcpre='#include <cuda.h>
+#include <cassert>
 #include <vector>
 #include <iostream>
 
