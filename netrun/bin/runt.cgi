@@ -608,13 +608,6 @@ sub print_main_form {
     editor.$blockScrolling=Infinity; // stupid warning
     editor.getSession().setValue(old_codebox.value);
 
-    // Add a random autocomplete tag to stop autocomplete
-    var textarea=document.getElementsByClassName("ace_text-input");
-    if (textarea && textarea[0]) {
-        textarea[0].autocomplete="nope-"+Math.random().toString(36).substr(2, 7);
-	textarea[0].name="ace-code";
-    }
-
     // Save/restore editor size using browser localStorage
     var div_resize=$("#ace_editor_resize"); // document.getElementById("ace_editor_resize");
     var store=window.localStorage;
