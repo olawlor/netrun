@@ -608,6 +608,13 @@ sub print_main_form {
     editor.$blockScrolling=Infinity; // stupid warning
     editor.getSession().setValue(old_codebox.value);
 
+    // Add a random autocomplete tag to stop autocomplete
+    var textarea=document.getElementsByClassName("ace_text-input");
+    if (textarea && textarea[0]) {
+        textarea[0].autocomplete="nope-"+Math.random().toString(36).substr(2, 7);
+	textarea[0].name="ace-code";
+    }
+
     // Save/restore editor size using browser localStorage
     var div_resize=$("#ace_editor_resize"); // document.getElementById("ace_editor_resize");
     var store=window.localStorage;
@@ -1581,7 +1588,7 @@ class gpu_mem_clear_at_startup { public:
 		}
 		$srcext='cu';
 		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
-		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
+		$linker="$compiler -Xlinker -R/usr/local/cuda/lib  -lcurand_static   -lculibos  ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();  # -Wall kills it
 		@cflags = grep { $_ ne "-Wall" and $_ ne "-fomit-frame-pointer" } @cflags;
@@ -1697,7 +1704,7 @@ class gpu_mem_clear_at_startup { public:
 		
 	} elsif ( $mach eq "ARMpi2") {
 	print "FYI-- This is an 900MHz Raspberry Pi 2 B+ (ARMv7r5)<br>\n";
-		$sr_host="lawpi2";
+		$sr_host="lawpi2B";
 		$sr_port=2983;
 		push(@cflags,"-marm");
 		if ( $lang eq "Assembly") {
