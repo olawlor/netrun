@@ -1064,8 +1064,8 @@ sub create_project_directory {
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
-		if ($lang eq "OpenMP") {$compiler=$linker='g++-4.2 -fopenmp -msse3 $(CFLAGS)';}
-		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -std=c++0x $(CFLAGS)';}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp -msse3 $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++ -fopenmp -std=c++0x $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
