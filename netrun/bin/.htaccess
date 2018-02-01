@@ -1,4 +1,4 @@
-<FilesMatch [cr][ru][an][a-z]*.cgi >
+<FilesMatch [cr][ru][a-z]*.cgi >
 <Limit GET POST>
 AuthName "UAF CS: NetRun Application"
 AuthType Basic

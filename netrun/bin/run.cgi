@@ -676,6 +676,7 @@ END_ACE
 			-values=>[
 			'C++',
 			'C++0x',
+			'C++14',
 			'C',
 			'Assembly-NASM',
 			'Assembly',
@@ -703,6 +704,7 @@ END_ACE
 				'glsl' => 'OpenGL Shader Language (GLSL)',
 				'spice' => 'SPICE Analog Circuit',
 				'C++0x' => 'C++11',
+				'C++14' => 'C++14',
 				'vhdl' => 'VHDL Digital Circuit'},
 			-default=>['C++0x']),"\n";
 
@@ -1059,13 +1061,14 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
+	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp -msse3 $(CFLAGS)';}
 		if ($lang eq "C++0x") {$compiler=$linker='g++ -fopenmp -std=c++0x $(CFLAGS)';}
+		if ($lang eq "C++14") {$compiler=$linker='g++ -fopenmp -std=c++14 $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
