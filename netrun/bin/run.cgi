@@ -686,6 +686,7 @@ END_ACE
 			'CUDA',
 			'GPGPU',
 			'OpenCL',
+			'CBMC',
 			'Python',
 			'Python3',
 			'Perl',
@@ -1397,6 +1398,11 @@ section .text
 		$compiler="$compiler -c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
+	elsif ( $lang eq "CBMC") {
+		$netrun='netrun/scripting';
+		$srcext='cpp';
+		$saferun=$scriptrun . '/usr/bin/cbmc '
+	}
 	elsif ( $lang eq "Python") {
 		$netrun='netrun/scripting';
 		$srcext='py';
@@ -1418,9 +1424,11 @@ section .text
 		$saferun=$scriptrun . '/usr/bin/php '
 	}
 	elsif ( $lang eq "JavaScript") {
+		$srcpre .= "function print() {console.log.apply(null,arguments);}\n";
+
 		$netrun='netrun/scripting';
 		$srcext='js';
-		$saferun=$scriptrun . '/usr/bin/v8-shell  '
+		$saferun=$scriptrun . '/usr/bin/nodejs  '
 	}
 	elsif ( $lang eq "Ruby") {
 		$netrun='netrun/scripting';
@@ -1612,7 +1620,7 @@ class gpu_mem_clear_at_startup { public:
 		$sr_host="skylake";
 		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
-		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx2 -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
 	print "Intel Sandy Bridge i5 2400 (3.1GHz, 4 cores)<br>\n";
