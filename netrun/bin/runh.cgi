@@ -219,9 +219,23 @@ function startupCode() {
 
 //]]></script>
 
+
+<!-- jquery is used for resizing the ace editor area -->
 <script src='ui/jquery-2.2.0.min.js'></script>
 <link rel='stylesheet' href='ui/jquery-ui.min.css'>
 <script src='ui/jquery-ui.min.js'></script>
+
+
+<!-- Global Site Tag (gtag.js) - Google Analytics -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=UA-106859486-1'></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments)};
+  gtag('js', new Date());
+
+  gtag('config', 'UA-106859486-1');
+</script>
+
 
 <style type='text/css' media='screen'>
 input, textarea, pre {
@@ -262,6 +276,7 @@ if ($rel_url eq "runa") { # ABET printing
   if ($dir =~ /^([\w]+[\w\/]*)$/) {
 	$dir=$1; # Looks OK-- untaint it.
 	foreach my $hw (<$userdir/saved/$dir/*.sav>) {
+		print $q->h2("Loading " . $hw);
 		&load_file($hw);
 		&print_main_form();
 		&compile_and_run();
@@ -320,7 +335,7 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	}
 	my $reset=$q->param('reset');
 
-	print("Loading homework '$hw'\n");
+	print("Loading homework $hw.\n");
 	load_file("class/$hw.sav");
 
 	# Stash the homework number in a hidden "hwnum" field.  This isn't ideal, frankly.
@@ -330,7 +345,15 @@ if ($hw) {  # "hw" mode: Loading up a homework assignment
 	if ( -r "saved/$name.sav" ) {
 	# Already have a saved homework with this name!  Use it instead
 		if ("$reset" ne "1") {
+			print("Resuming saved homework $name. <br>");
+			my $oldq=$q;
 			load_file("saved/$name.sav");
+			my $newhw=$q->param('hwnum');
+			if ($newhw ne $hw) 
+			{ # Saved homework is not the one we're trying to load
+				print("Saved homework $newhw does not match $hw, doing clean reset. <br>");
+				$q=$oldq;
+			}
 		} else { # Reset to factory defaults
 			print("<p>Clean reset to original instructor's starting code.");
 		}
@@ -569,6 +592,7 @@ sub print_main_form {
 
 <script src="./ui/ace-min/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
+  if (ace) {
     // Hides textbox if Javascript is enabled
     var old_codebox=document.getElementsByName("code")[0];
     old_codebox.style.display = "none";
@@ -617,7 +641,7 @@ sub print_main_form {
           }
         }
     });
-    
+  }
 </script>
 END_ACE
 
@@ -652,6 +676,7 @@ END_ACE
 			-values=>[
 			'C++',
 			'C++0x',
+			'C++14',
 			'C',
 			'Assembly-NASM',
 			'Assembly',
@@ -661,6 +686,7 @@ END_ACE
 			'CUDA',
 			'GPGPU',
 			'OpenCL',
+			'CBMC',
 			'Python',
 			'Python3',
 			'Perl',
@@ -679,8 +705,9 @@ END_ACE
 				'glsl' => 'OpenGL Shader Language (GLSL)',
 				'spice' => 'SPICE Analog Circuit',
 				'C++0x' => 'C++11',
+				'C++14' => 'C++14',
 				'vhdl' => 'VHDL Digital Circuit'},
-			-default=>['C++']),"\n";
+			-default=>['C++0x']),"\n";
 
 	print
 		"<p>Mode:",
@@ -730,32 +757,32 @@ END_ACE
 			],
 			-labels=>{
 				'skylake64' => 'x86_64 Skylake x4',
-				'sandy64' => 'x86_64 Sandy Bridge x4',
-				'phenom64' => 'x86_64 Phenom II x6',
-				'x64' => 'x86_64 Q6600 x4',
-				'x86' => 'x86 P4 x2',
+			#	'sandy64' => 'x86_64 Sandy Bridge x4',
+			#	'phenom64' => 'x86_64 Phenom II x6',
+			#	'x64' => 'x86_64 Q6600 x4',
+			#	'x86' => 'x86 P4 x2',
 			#	'x86_atom' => 'x86 Atom x1',
 			#	'x86_2core' => 'x86 Core2 x2',
 			#	'x86_4core' => 'x86  (Linux)',
 			#	'ia64' => 'ia64 (Itanium Linux)',
 			#	'win32' => 'x86 (Windows) EMULATED',
-				'x86_2' => 'x86 dual P3 (Linux)',
-				'486' => '486 (Ancient Linux)',
+			#	'x86_2' => 'x86 dual P3 (Linux)',
+			#	'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
 				'ARMpi2' => 'ARM (Raspberry Pi 2)',
-				'ARM' => 'ARM (ARMv6 Linux)',
-				'SPARC' => 'SPARC (Sun Ultra5 Linux)',
-				'MIPS' => 'MIPS (SGI IRIX)',
+			#	'ARM' => 'ARM (ARMv6 Linux)',
+			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
+			#	'MIPS' => 'MIPS (SGI IRIX)',
 			#	'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
 			#	'PIC' => 'PIC Microcontroller'
 			},
-			-default=>['x64']),"\n";
+			-default=>['skylake64']),"\n";
 
 	print
 		"<p>Compile options:",
 		$q->checkbox_group(-name=>'ocompile',
-			-values=>['Optimize','Debug','Warnings','Verbose','Shared'],
+			-values=>['TraceASM','Optimize','Debug','Warnings','Verbose'],
 			-defaults=>['Optimize','Warnings']),"<br>\n";
 
 	print
@@ -777,17 +804,17 @@ END_ACE
 	}
 
 	print "<hr>";
-	if (1) {
+	if (0) {
 		print "Announcements:
 	<UL>
-		<li>ACE editor support (2016-02-05, thanks Noah!)
+		<li>ACE editor support (2016-02-05, thanks to Noah Betzen)
 		<li>Disqus comments for homeworks after OK! (2014-08-22)
 		<li>foo can take or return long, string, etc.  (2014-08-20)
 		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
 	</UL>
 	";
 	}
-	print "Version 2014-09-07";
+	print "Version 2018-08-24";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -848,8 +875,9 @@ sub compile_and_run {
 		journal("hwok $hw_und");
 		system("cp","$proj->{src}","hw/$hw_und");
 		
-		
-		print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
+		if ($rel_url ne "runa") { 
+	
+			print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
     <div id="disqus_thread"></div>
     <script type="text/javascript">
         /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
@@ -864,6 +892,7 @@ sub compile_and_run {
     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 ';
+		}
 	}
 }
 
@@ -949,6 +978,7 @@ sub create_project_directory {
 	if (!$lang) { $lang="Assembly"; }
 	my $mach=$q->param('mach');
 	if (!$mach) { $mach="x86"; }
+	if ( $mach eq "x64" ) { $mach="skylake64"; }
 	
 	my @ocompile=$q->param('ocompile');
 	my @orun=$q->param('orun');
@@ -979,7 +1009,7 @@ sub create_project_directory {
 	my $srcflag="-c";
 	my $outflag="-o";
 	my $netrun="netrun/obj";
-	my $scriptrun='/home/netrun_scripting/chrootrun/chrootrun ';
+	my $scriptrun='/home/netrun_gpu/scriptrun ';
 
 	# Prepare build subdirectory
 	system("rm","-fr","project");
@@ -992,7 +1022,6 @@ sub create_project_directory {
 	
 	# my $gpu_host="powerwall10"; # GTX 670
 	my $gpu_host="skylake"; # GTX 980 Ti
-
 
 	my $ret="int";
 	my $arg0="void";
@@ -1033,13 +1062,14 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "OpenMP") {  ############# C++
+	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
-		if ($lang eq "OpenMP") {$compiler=$linker='g++-4.2 -fopenmp -msse3 $(CFLAGS)';}
-		if ($lang eq "C++0x") {$compiler=$linker='g++-4.7 -fopenmp -std=c++0x $(CFLAGS)';}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp -msse3 $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++ -fopenmp -std=c++0x $(CFLAGS)';}
+		if ($lang eq "C++14") {$compiler=$linker='g++ -fopenmp -std=c++14 $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -1051,6 +1081,8 @@ sub create_project_directory {
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <string>
 #include "lib/inc.h"
@@ -1063,7 +1095,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre=$srcpre . $proto . " {\n";
 			$srcpost="\n;";
-			if ($ret ne "void") { $srcpost .= "\n  return 0;"; }
+		#	if ($ret ne "void") { $srcpost .= "\n  return 0;"; }
 			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
@@ -1123,7 +1155,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 		$compiler="as"; 
 		$disassembler="objdump -drC"; # Disassemble with GNU syntax...
 		$srcext="S";
-		$srcpre='
+		$srcpre .='
 .section ".text" 
 '. $gradecode .'
 .globl foo
@@ -1135,11 +1167,12 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 		}
 		$srcflag="";
 		# @cflags=(); # Get rid of (C-specific) flags
+
 	}
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
 		$compiler="nasm -f elf32 ";
 		$srcext="S";
-		$srcpre='
+		$srcpre .='
 section .text
 global foo
 ';
@@ -1151,6 +1184,181 @@ global foo
 			$srcpost.=$gradepost;
 		}
 		$srcflag="";
+
+		# Add macro if we're doing TraceASM
+		if (grep(/^TraceASM$/, @ocompile)==1) {
+			# Start with canary version of user code?
+			#   (to pick up assembler errors only, but causes errors on label use)
+			#  $srcpre=$code . 
+			$srcpre = '
+
+; TraceASM support code:
+section .bss align=32
+
+global TraceASM_state
+TraceASM_state:
+	resq 16 ; times 16 dq 0 ; [0]: general purpose integer registers, rax - r15
+	resq 32 ; times 16 dq 0,0 ; [8*16]: xmm0-15
+TraceASM_state_flags:
+	resq 2 ; times 2 dq 0 ; flags area (big for alignment)
+TraceASM_state_end:
+
+TraceASM_stack:
+	resq 1024*1024
+TraceASM_stack_end:
+
+section .text
+
+;  trace arguments: %1 is line number; %2 is code being executed.
+%macro TraceASM 2
+
+; Basic idea: show differences in machine state after each line of x86 code.
+; Need a user-visible copy of all machine state:
+
+%%save_TraceASM:
+	; Save all the integer registers:
+	mov QWORD[TraceASM_state+8*0],rax
+	mov QWORD[TraceASM_state+8*1],rcx
+	mov QWORD[TraceASM_state+8*2],rdx
+	mov QWORD[TraceASM_state+8*3],rbx
+	mov QWORD[TraceASM_state+8*4],rsp
+	mov QWORD[TraceASM_state+8*5],rbp
+	mov QWORD[TraceASM_state+8*6],rsi
+	mov QWORD[TraceASM_state+8*7],rdi
+	mov QWORD[TraceASM_state+8*8],r8
+	mov QWORD[TraceASM_state+8*9],r9
+	mov QWORD[TraceASM_state+8*10],r10
+	mov QWORD[TraceASM_state+8*11],r11
+	mov QWORD[TraceASM_state+8*12],r12
+	mov QWORD[TraceASM_state+8*13],r13
+	mov QWORD[TraceASM_state+8*14],r14
+	mov QWORD[TraceASM_state+8*15],r15
+	
+	; Save all the floating point registers
+	movaps [TraceASM_state+8*16+16*0],xmm0
+	movaps [TraceASM_state+8*16+16*1],xmm1
+	movaps [TraceASM_state+8*16+16*2],xmm2
+	movaps [TraceASM_state+8*16+16*3],xmm3
+	movaps [TraceASM_state+8*16+16*4],xmm4
+	movaps [TraceASM_state+8*16+16*5],xmm5
+	movaps [TraceASM_state+8*16+16*6],xmm6
+	movaps [TraceASM_state+8*16+16*7],xmm7
+	movaps [TraceASM_state+8*16+16*8],xmm8
+	movaps [TraceASM_state+8*16+16*9],xmm9
+	movaps [TraceASM_state+8*16+16*10],xmm10
+	movaps [TraceASM_state+8*16+16*11],xmm11
+	movaps [TraceASM_state+8*16+16*12],xmm12
+	movaps [TraceASM_state+8*16+16*13],xmm13
+	movaps [TraceASM_state+8*16+16*14],xmm14
+	movaps [TraceASM_state+8*16+16*15],xmm15
+	
+	
+	; Switch stacks to the tracer stack 
+	;  (avoids trashing user stack while printing)
+	mov rsp,TraceASM_stack_end
+	
+	; Save flags (mov above does not change flags)
+	pushf
+	pop rax
+	mov QWORD[TraceASM_state_flags],rax
+
+	mov rdi,%1,
+	mov rsi,%%codestring
+	mov rdx,TraceASM_state
+	mov rcx,TraceASM_state_end-TraceASM_state
+	extern TraceASM_cside
+	call TraceASM_cside
+	jmp %%restore_TraceASM
+
+%%codestring: db %2,0
+	
+; Restore the machine from the single TraceASM_state:
+%%restore_TraceASM:
+	; Restore flags
+	mov rax,QWORD[TraceASM_state_flags]
+	push rax
+	popf
+	
+	; Restore all the integer registers:
+	mov rax,QWORD[TraceASM_state+8*0]
+	mov rcx,QWORD[TraceASM_state+8*1]
+	mov rdx,QWORD[TraceASM_state+8*2]
+	mov rbx,QWORD[TraceASM_state+8*3]
+	mov rsp,QWORD[TraceASM_state+8*4]
+	mov rbp,QWORD[TraceASM_state+8*5]
+	mov rsi,QWORD[TraceASM_state+8*6]
+	mov rdi,QWORD[TraceASM_state+8*7]
+	mov r8,QWORD[TraceASM_state+8*8]
+	mov r9,QWORD[TraceASM_state+8*9]
+	mov r10,QWORD[TraceASM_state+8*10]
+	mov r11,QWORD[TraceASM_state+8*11]
+	mov r12,QWORD[TraceASM_state+8*12]
+	mov r13,QWORD[TraceASM_state+8*13]
+	mov r14,QWORD[TraceASM_state+8*14]
+	mov r15,QWORD[TraceASM_state+8*15]
+	
+	; Restore all the floating point registers
+	movaps xmm0, [TraceASM_state+8*16+16*0]
+	movaps xmm1, [TraceASM_state+8*16+16*1]
+	movaps xmm2, [TraceASM_state+8*16+16*2]
+	movaps xmm3, [TraceASM_state+8*16+16*3]
+	movaps xmm4, [TraceASM_state+8*16+16*4]
+	movaps xmm5, [TraceASM_state+8*16+16*5]
+	movaps xmm6, [TraceASM_state+8*16+16*6]
+	movaps xmm7, [TraceASM_state+8*16+16*7]
+	movaps xmm8, [TraceASM_state+8*16+16*8]
+	movaps xmm9, [TraceASM_state+8*16+16*9]
+	movaps xmm10, [TraceASM_state+8*16+16*10]
+	movaps xmm11, [TraceASM_state+8*16+16*11]
+	movaps xmm12, [TraceASM_state+8*16+16*12]
+	movaps xmm13, [TraceASM_state+8*16+16*13]
+	movaps xmm14, [TraceASM_state+8*16+16*14]
+	movaps xmm15, [TraceASM_state+8*16+16*15]
+
+%endmacro
+' . $srcpre;
+
+			# Add TraceASM macro calls to each line of the code
+			#  FIXME: don't trace section, data, strings, globals, etc.
+			#   and trim comments.
+			my $newcode = "TraceASM 0,\"Startup\"\n\n";
+			my $lineno=0;
+			for my $line (split /^/, $code) {
+				$lineno+=1;
+				chomp($line); # trim newline
+
+				# Add original code:
+				$newcode .= "$line\n";
+				
+				if ($line =~ /^([^;]*);.*/) { 
+					$line=$1; # strip comments
+				}
+				if ($line =~ /^\s*[a-zA-Z0-9_]*\s*:(.*)/) { 
+					$line=$1; # strip labels
+				}
+				if ($line =~ /section /i) {
+					next; # skip section markers
+				}
+				if ($line =~ /times /i) {
+					next; # skip repeated stuff
+				}
+				if ($line =~ /^\s*d[bwdq] /i) {
+					next; # skip data declarations
+				}
+				if ($line =~ /['"`]/) {
+					next; # skip lines with quote chars
+				}				
+				if ($line =~ /^\s*$/) {
+					next; # skip blank lines
+				}
+				
+				$newcode .= "TraceASM $lineno,'$line'\n";
+
+			}
+			$code=$newcode;
+	
+		}
+
 	}
 	elsif ( $lang eq "MPI") {
 		$sr_host="powerwall0";
@@ -1166,17 +1374,6 @@ global foo
 		}
 
 		$saferun="netrun/safe_MPI.sh $numprocs ";
-	}
-	elsif ( $lang eq "CUDA") {
-		$sr_host=$gpu_host;
-		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep  $(CFLAGS)';
-		$linker="$compiler -Xlinker -R/usr/local/cuda/lib ";
-		$disassembler="cat code.ptx; echo ";
-		# @cflags=();  # -Wall kills it
-		@cflags = grep { $_ != "-Wall" } @cflags;
-		$srcflag="-c";
-		$saferun="netrun/safe_CUDA.sh ";
 	}
 	elsif ( $lang eq "GPGPU") {
 		$sr_host=$gpu_host;
@@ -1201,6 +1398,11 @@ global foo
 		$compiler="$compiler -c";
 		$saferun="netrun/safe_CUDA.sh ";
 	}
+	elsif ( $lang eq "CBMC") {
+		$netrun='netrun/scripting';
+		$srcext='cpp';
+		$saferun=$scriptrun . '/usr/bin/cbmc '
+	}
 	elsif ( $lang eq "Python") {
 		$netrun='netrun/scripting';
 		$srcext='py';
@@ -1222,9 +1424,11 @@ global foo
 		$saferun=$scriptrun . '/usr/bin/php '
 	}
 	elsif ( $lang eq "JavaScript") {
+		$srcpre .= "function print() {console.log.apply(null,arguments);}\n";
+
 		$netrun='netrun/scripting';
 		$srcext='js';
-		$saferun=$scriptrun . '/usr/bin/v8-shell  '
+		$saferun=$scriptrun . '/usr/bin/nodejs  '
 	}
 	elsif ( $lang eq "Ruby") {
 		$netrun='netrun/scripting';
@@ -1297,6 +1501,105 @@ const int program[]={';
 	else {
 		security_err("Invalid language '$lang'");
 	}
+
+
+	if ( $lang eq "CUDA") {
+		$sr_host=$gpu_host;
+		if ($mode ne 'main') { # add headers and gpu_vec:
+			$srcpre='#include <cuda.h>
+#include <cassert>
+#include <vector>
+#include <iostream>
+
+/* Lawlor NetRun CUDA utility functions: */
+#define gpu_check(cudacall) { int err=cudacall; if (err!=cudaSuccess) { std::cout<<"CUDA ERROR "<<err<<" at line "<<__LINE__<<": "<<#cudacall<<"\n"; exit(1); } }
+
+/* CPU side class to represent an array in GPU memory */
+template <class T>
+class gpu_vec {
+	T *ptr; // points to GPU memory
+	unsigned long len; // number of T elements allocated
+public:
+	// Make a null vector
+	gpu_vec() :ptr(0), len(0) {}
+	// Make an empty (uninitialized) vector of this length
+	gpu_vec(unsigned long size) :ptr(0),len(size) {
+		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
+	}
+	// Copy from this CPU-side vector
+	gpu_vec(const std::vector<T> &vec) :ptr(0),len(vec.size()) {
+		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
+		copy_from(vec);
+	}
+	// Deallocate the GPU data
+	~gpu_vec() {
+		if (ptr) gpu_check(cudaFree(ptr));
+		ptr=0; len=0;
+	}
+	
+	// Return the length of our vector
+	unsigned long size() const { return len; }
+	
+	// Silently convert to a GPU T pointer.  
+	//  This is useful for calling GPU kernels.
+	//  It is NOT useful for accessing the data on the CPU side.
+	operator T* (void) const { return ptr; }
+	
+	// Explicit memcpy to pull separate elements out.
+	//   CAUTION: this is fairly slow; assign to a vector if you need lots of elements.
+	const T operator[](unsigned long idx) const {
+		T ret;
+		gpu_check(cudaMemcpy(&ret,&ptr[idx],sizeof(T),cudaMemcpyDeviceToHost));
+		return ret;
+	}
+	// Copy data from the GPU to this CPU side std::vector
+	void copy_to(std::vector<T> &vec) const {
+		vec.resize(len);
+		gpu_check(cudaMemcpy(&vec[0],&ptr[0],len*sizeof(T),cudaMemcpyDeviceToHost));
+	}
+	
+	// Copy data from this CPU side std::vector onto the GPU
+	void copy_from(const std::vector<T> &vec) {
+		assert(len==vec.size());
+		gpu_check(cudaMemcpy(&ptr[0],&vec[0],len*sizeof(T),cudaMemcpyHostToDevice));
+	}
+	
+private:
+	// if gpuvec gets copied, the pointer will get freed twice, so do not allow copying.
+	gpu_vec(const gpu_vec<T> &g);
+	void operator=(const gpu_vec<T> &g);
+};
+
+/* Zero-initialize GPU memory (to avoid weird "output never changes" bugs) */
+__global__ void gpu_mem_clear(int *mem) { 
+	mem[threadIdx.x+blockIdx.x*blockDim.x]=0; 
+}
+class gpu_mem_clear_at_startup { public:
+	gpu_mem_clear_at_startup() {
+		int n=10000000;
+		gpu_vec<int> mem(n);
+		gpu_mem_clear<<< n/256, 256 >>>(mem);
+		gpu_check(cudaDeviceSynchronize());
+	}
+} gpu_mem_clear_at_startup_singleton;
+
+
+
+/* padding here so total NetRun additions are 100 lines: so error on line 123 -> web line 23 */
+
+
+' . $srcpre;
+		}
+		$srcext='cu';
+		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
+		$linker="$compiler -Xlinker -R/usr/local/cuda/lib  -lcurand_static   -lculibos  ";
+		$disassembler="cat code.ptx; echo ";
+		# @cflags=();  # -Wall kills it
+		@cflags = grep { $_ ne "-Wall" and $_ ne "-fomit-frame-pointer" } @cflags;
+		$srcflag="-c";
+		$saferun="netrun/safe_CUDA.sh ";
+	}
+
 	if ( $srcpost eq "") {
 		$srcpost = $srcpost . $gradepost;
 	}
@@ -1305,7 +1608,7 @@ const int program[]={';
 	if ( $sr_host ne "" ) { # already set--nothing to do.
 		
 	} elsif ($netrun eq "netrun/scripting") { # The one scripting host
-		$sr_host="sandy"; $sr_port=2984;
+		$sr_host="skylake"; # $sr_port=2984;
 	}
 	elsif ($mach eq "x86") {
 	print "FYI-- This is a hyperthreaded 2.8GHz Intel Pentium 4 machine.<br>\n";
@@ -1317,7 +1620,7 @@ const int program[]={';
 		$sr_host="skylake";
 		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
-		if ( $lang eq "C" || $lang eq "C++" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx -msse2avx"); }
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx2 -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
 	print "Intel Sandy Bridge i5 2400 (3.1GHz, 4 cores)<br>\n";
@@ -1405,7 +1708,7 @@ const int program[]={';
 		
 	} elsif ( $mach eq "ARMpi2") {
 	print "FYI-- This is an 900MHz Raspberry Pi 2 B+ (ARMv7r5)<br>\n";
-		$sr_host="lawpi2";
+		$sr_host="lawpi2B";
 		$sr_port=2983;
 		push(@cflags,"-marm");
 		if ( $lang eq "Assembly") {
@@ -1533,7 +1836,7 @@ const int program[]={';
 	
 	# Write their input data
 	my $input="";
-	if ($q->param('input')) {
+	if (length $q->param('input')) {
 		$input="< input.txt";
 		open(INPUT,">project/input.txt");
 		my $inputdata=$q->param('input');

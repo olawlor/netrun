@@ -115,7 +115,7 @@ if ($grades) {
 		my_security("Grades name '$grades' contains invalid characters");
 	}
 	journal("dump_grades $grades");
-	print $q->header(-type  =>  'text/html');
+	print $q->header(-type  =>  'text/html', -charset => "UTF-8");
 	if (-r "grades/$grades" ) {
 		system("cat","grades/$grades");
 		exit(0);
@@ -126,7 +126,8 @@ if ($grades) {
 }
 
 ############# Output HTML
-print $q->header;
+# print $q->header(-type  =>  'text/html', -charset => "UTF-8");
+print $q->header;  # force ISO codepage
 
 print $q->start_html(-title=>'NetRun',
 		-script=>"
@@ -722,7 +723,7 @@ END_ACE
 
 	print   "<p>Function: ",
 		$q->popup_menu(-name=>'foo_ret',
-			-values=>['void','long','int','double','float','std::string'],
+			-values=>['void','long','int','double','float','std::string','sse_float4','sse_double2'],
 			-default=>['long']),
 		" foo(",
 		$q->popup_menu(-name=>'foo_arg0',
@@ -735,44 +736,45 @@ END_ACE
 		$q->popup_menu(-name=>'mach',
 			-values=>[
 				'skylake64',
-				'sandy64',
-				'phenom64',
-				'x64',
+			#	'sandy64',
+			#	'phenom64',
+			#	'x64',
 				'x86',
 			#	'x86_2core',
 			#	'x86_atom',
 			#	'x86_4core',
 			#	'ia64',
 			#	'win32',
-				'x86_2',
-				'486',
+			#	'x86_2',
+			#	'486',
 			#	'Alpha',
 				'ARM',
-				'ARMpi2',
-				'SPARC',
-				'MIPS',
+			#	'ARMpi2',
+			#	'SPARC',
+			#	'MIPS',
 			#	'PPC',
 			#	'PPC_EMU',
 			#	'PIC'
 			],
 			-labels=>{
 				'skylake64' => 'x86_64 Skylake x4',
-				'sandy64' => 'x86_64 Sandy Bridge x4',
-				'phenom64' => 'x86_64 Phenom II x6',
-				'x64' => 'x86_64 Q6600 x4',
-				'x86' => 'x86 P4 x2',
+				'x86' => 'x86_32 Skylake x4',
+			#	'sandy64' => 'x86_64 Sandy Bridge x4',
+			#	'phenom64' => 'x86_64 Phenom II x6',
+			#	'x64' => 'x86_64 Q6600 x4',
+			#	'x86' => 'x86 P4 x2',
 			#	'x86_atom' => 'x86 Atom x1',
 			#	'x86_2core' => 'x86 Core2 x2',
 			#	'x86_4core' => 'x86  (Linux)',
 			#	'ia64' => 'ia64 (Itanium Linux)',
 			#	'win32' => 'x86 (Windows) EMULATED',
-				'x86_2' => 'x86 dual P3 (Linux)',
-				'486' => '486 (Ancient Linux)',
+			#	'x86_2' => 'x86 dual P3 (Linux)',
+			#	'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
-				'ARMpi2' => 'ARM (Raspberry Pi 2)',
-				'ARM' => 'ARM (ARMv6 Linux)',
-				'SPARC' => 'SPARC (Sun Ultra5 Linux)',
-				'MIPS' => 'MIPS (SGI IRIX)',
+				'ARM' => 'ARM (Raspberry Pi 3)',
+			#	'ARM' => 'ARM (ARMv6 Linux)',
+			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
+			#	'MIPS' => 'MIPS (SGI IRIX)',
 			#	'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
 			#	'PIC' => 'PIC Microcontroller'
@@ -782,7 +784,7 @@ END_ACE
 	print
 		"<p>Compile options:",
 		$q->checkbox_group(-name=>'ocompile',
-			-values=>['TraceASM','Optimize','Debug','Warnings','Verbose','Shared'],
+			-values=>['TraceASM','Optimize','Debug','Warnings','Verbose'],
 			-defaults=>['Optimize','Warnings']),"<br>\n";
 
 	print
@@ -804,7 +806,7 @@ END_ACE
 	}
 
 	print "<hr>";
-	if (1) {
+	if (0) {
 		print "Announcements:
 	<UL>
 		<li>ACE editor support (2016-02-05, thanks to Noah Betzen)
@@ -814,7 +816,7 @@ END_ACE
 	</UL>
 	";
 	}
-	print "Version 2017-09-06";
+	print "Version 2018-08-24";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -1113,7 +1115,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 ' . $gradecode;
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre=$srcpre . $proto ." {\n";
-			$srcpost="\n;\n  return 0;\n}\n" . $gradepost;
+			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
 	elsif ( $lang eq "Fortran 77") { ############### Fortran 77
@@ -1178,7 +1180,7 @@ global foo
 ';
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre .="\nfoo:\n" . $gradecode;
-			$srcpost=$gradepost . "\nret";
+			$srcpost=$gradepost . "\n";
 		} else {
 			$srcpre .=$gradecode;
 			$srcpost.=$gradepost;
@@ -1505,70 +1507,11 @@ const int program[]={';
 
 	if ( $lang eq "CUDA") {
 		$sr_host=$gpu_host;
-		if ($mode ne 'main') { # add headers and gpu_vec:
-			$srcpre='#include <cuda.h>
+		# add headers
+		$srcpre='#include <cuda.h>
 #include <cassert>
 #include <vector>
 #include <iostream>
-
-/* Lawlor NetRun CUDA utility functions: */
-#define gpu_check(cudacall) { int err=cudacall; if (err!=cudaSuccess) { std::cout<<"CUDA ERROR "<<err<<" at line "<<__LINE__<<": "<<#cudacall<<"\n"; exit(1); } }
-
-/* CPU side class to represent an array in GPU memory */
-template <class T>
-class gpu_vec {
-	T *ptr; // points to GPU memory
-	unsigned long len; // number of T elements allocated
-public:
-	// Make a null vector
-	gpu_vec() :ptr(0), len(0) {}
-	// Make an empty (uninitialized) vector of this length
-	gpu_vec(unsigned long size) :ptr(0),len(size) {
-		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
-	}
-	// Copy from this CPU-side vector
-	gpu_vec(const std::vector<T> &vec) :ptr(0),len(vec.size()) {
-		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
-		copy_from(vec);
-	}
-	// Deallocate the GPU data
-	~gpu_vec() {
-		if (ptr) gpu_check(cudaFree(ptr));
-		ptr=0; len=0;
-	}
-	
-	// Return the length of our vector
-	unsigned long size() const { return len; }
-	
-	// Silently convert to a GPU T pointer.  
-	//  This is useful for calling GPU kernels.
-	//  It is NOT useful for accessing the data on the CPU side.
-	operator T* (void) const { return ptr; }
-	
-	// Explicit memcpy to pull separate elements out.
-	//   CAUTION: this is fairly slow; assign to a vector if you need lots of elements.
-	const T operator[](unsigned long idx) const {
-		T ret;
-		gpu_check(cudaMemcpy(&ret,&ptr[idx],sizeof(T),cudaMemcpyDeviceToHost));
-		return ret;
-	}
-	// Copy data from the GPU to this CPU side std::vector
-	void copy_to(std::vector<T> &vec) const {
-		vec.resize(len);
-		gpu_check(cudaMemcpy(&vec[0],&ptr[0],len*sizeof(T),cudaMemcpyDeviceToHost));
-	}
-	
-	// Copy data from this CPU side std::vector onto the GPU
-	void copy_from(const std::vector<T> &vec) {
-		assert(len==vec.size());
-		gpu_check(cudaMemcpy(&ptr[0],&vec[0],len*sizeof(T),cudaMemcpyHostToDevice));
-	}
-	
-private:
-	// if gpuvec gets copied, the pointer will get freed twice, so do not allow copying.
-	gpu_vec(const gpu_vec<T> &g);
-	void operator=(const gpu_vec<T> &g);
-};
 
 /* Zero-initialize GPU memory (to avoid weird "output never changes" bugs) */
 __global__ void gpu_mem_clear(int *mem) { 
@@ -1576,20 +1519,15 @@ __global__ void gpu_mem_clear(int *mem) {
 }
 class gpu_mem_clear_at_startup { public:
 	gpu_mem_clear_at_startup() {
-		int n=10000000;
-		gpu_vec<int> mem(n);
-		gpu_mem_clear<<< n/256, 256 >>>(mem);
-		gpu_check(cudaDeviceSynchronize());
+		int n=100000000;
+		int *gpu_mem=0;
+		cudaMalloc(&gpu_mem,n*sizeof(int));
+		gpu_mem_clear<<< n/256, 256 >>>(gpu_mem);
+		cudaFree(gpu_mem);
 	}
 } gpu_mem_clear_at_startup_singleton;
 
-
-
-/* padding here so total NetRun additions are 100 lines: so error on line 123 -> web line 23 */
-
-
 ' . $srcpre;
-		}
 		$srcext='cu';
 		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib  -lcurand_static   -lculibos  ";
@@ -1611,15 +1549,31 @@ class gpu_mem_clear_at_startup { public:
 		$sr_host="skylake"; # $sr_port=2984;
 	}
 	elsif ($mach eq "x86") {
-	print "FYI-- This is a hyperthreaded 2.8GHz Intel Pentium 4 machine.<br>\n";
-		$sr_host="olawlor";
-		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
-		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
+	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores, 32-bit mode) <br>\n";
+		$sr_host="skylake";
+		$saferun="netrun/safe_run32.sh";
+		push(@cflags,"-m32");
+		if ( $lang eq "Assembly" ) { $srcpost='ret' . $gradepost; }
+		if ( $lang eq "Assembly-NASM" ) { $srcpost='ret' . $gradepost; }
 	} elsif ($mach eq "skylake64") {
 	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores) <br>\n";
 		$sr_host="skylake";
-		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
+		if ( $lang eq "Assembly-NASM") { 
+			$compiler="nasm -f elf64 ";
+			$srcpost='section .text
+netrun_ran_off_end:
+	mov rdi,netrun_ran_off_end_string
+	extern puts
+	call puts
+	mov rax,0
+	ret ; added by netrun
+
+section .data
+netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
+section .text
+			' . $gradepost;
+		}
 		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx2 -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
@@ -1683,7 +1637,7 @@ class gpu_mem_clear_at_startup { public:
 	} elsif ( $mach eq "SPARC") {
 	print "FYI-- This is a 350MHz UltraSparc IIi CPU.<br>\n";
 		$sr_host="ultra52";
-	} elsif ( $mach eq "ARM") {
+	} elsif ( $mach eq "ARMold") {
 	print "FYI-- This is a 500MHz Samsung S3C6410 ARMv6 CPU.<br>\n";
 		$sr_host="viz1";
 		$sr_port=2984;
@@ -1706,9 +1660,9 @@ class gpu_mem_clear_at_startup { public:
 		}
 
 		
-	} elsif ( $mach eq "ARMpi2") {
-	print "FYI-- This is an 900MHz Raspberry Pi 2 B+ (ARMv7r5)<br>\n";
-		$sr_host="lawpi2B";
+	} elsif ( $mach eq "ARM" || $mach eq "ARMpi2" ) {
+	print "FYI-- This is an 1.2GHz Raspberry Pi 3 (ARMv71)<br>\n";
+		$sr_host="lawpi3";
 		$sr_port=2983;
 		push(@cflags,"-marm");
 		if ( $lang eq "Assembly") {
