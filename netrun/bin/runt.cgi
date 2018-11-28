@@ -1665,8 +1665,10 @@ section .text
 		$sr_host="lawpi3";
 		$sr_port=2983;
 		push(@cflags,"-marm");
+		push(@cflags,"-mfloat-abi=hard");
+		push(@cflags,"-mfpu=neon");
 		if ( $lang eq "Assembly") {
-			$compiler="as -mcpu=cortex-a7 -mfpu=vfpv4 "; 
+			$compiler="as -mcpu=cortex-a7 -mfpu=neon "; 
 		}
 		$disassembler="objdump -drC";   # -M freaks out this version
 		if ( $lang eq "Assembly") { ################# GNU Assembly
