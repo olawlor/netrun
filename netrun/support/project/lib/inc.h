@@ -23,6 +23,40 @@ inline void *netrun_allocate_mystery_size(void) {
 	return malloc(atoi(mys));
 }
 
+
+#ifdef __SSE__
+#include <xmmintrin.h>
+#include <iostream>
+
+class sse_float4 {
+public:
+	__m128 v;
+	sse_float4(__m128 v_) :v(v_) {}
+
+	friend std::ostream & operator<<(std::ostream &os,const sse_float4 &s) {
+		float f[4];
+		_mm_store_ps(f,s.v);
+		std::cout<<"{"<<f[0]<<","<<f[1]<<","<<f[2]<<","<<f[3]<<"}";
+		return os;
+	}
+};
+
+class sse_double2 {
+public:
+	__m128d v;
+	sse_double2(__m128d v_) :v(v_) {}
+
+	friend std::ostream & operator<<(std::ostream &os,const sse_double2 &s) {
+		double d[2];
+		_mm_store_pd(d,s.v);
+		std::cout<<"{"<<d[0]<<","<<d[1]<<"}";
+		return os;
+	}
+};
+
+
+#endif
+
 #else
 #  define CDECL extern /* empty-- already C or Assembly */
 #endif
