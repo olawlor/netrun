@@ -92,7 +92,7 @@ double time_in_seconds(void) { /* This seems to give terrible resolution (60ms!)
 }
 #else /* UNIX or other system */
 #  include <sys/time.h> //For gettimeofday time implementation
-#  define time_in_seconds_granularity 0.01 /* seconds */
+#  define time_in_seconds_granularity 0.001 /* seconds */
 double time_in_seconds(void) {
 	struct timeval tv;
 	gettimeofday(&tv,NULL);
@@ -175,7 +175,7 @@ void print_time(const char *fnName,timeable_fn fn)
 int iarray_print(int *arr,int n)
 {
 	int i=0,p;
-	if (n<0 || n>1000) {
+	if (n<0 || n>1000000) {
 		printf("ERROR in iarray_print: passed invalid number of elements %d (0x%08x) for array %p.  Did you pass the arguments in the wrong order?\n",
 			n,n,arr);
 		exit(1);
@@ -198,7 +198,7 @@ int iarray_print(int *arr,int n)
 long larray_print(long *arr,long n)
 {
 	long i=0,p;
-	if (n<0 || n>100000) {
+	if (n<0 || n>1000000) {
 		printf("ERROR in larray_print: passed invalid number of elements %ld (0x%08lx) for array %p.  Did you pass the arguments in the wrong order?\n",
 			n,n,arr);
 		exit(1);
