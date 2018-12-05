@@ -10,7 +10,7 @@ desc="CS Problem $HWNUM"
 #  Exits on errors.
 run_prog() {
 echo "$in" | $prog > $0.out.orig 2>&1
-grep -v TraceASM $0.out.orig > $0.out
+grep -a -v TraceASM $0.out.orig > $0.out
 }
 
 
@@ -20,11 +20,19 @@ bad_diffs() {
 	echo "Your output for $desc is not quite right.  For the input:"
 	echo "$in" | netrun/filter_htmlpre.pl 
 	echo "I expected the output:"
-	echo "$out" | netrun/filter_htmlpre.pl
+	if [ ! -z "$outsecret" ]
+	then
+		echo "$outsecret" | netrun/filter_htmlpre.pl
+	else
+		echo "$out" | netrun/filter_htmlpre.pl
+	fi
 	echo "but instead your program returned:"
 	cat $0.out | netrun/filter_htmlpre.pl
-	echo "Differences: (yours &lt;) (mine &gt;)"
-	cat $0.diffs | netrun/filter_htmlpre.pl
+	if [ -z "$outsecret" ]
+	then
+		echo "Differences: (yours &lt;) (mine &gt;)"
+		cat $0.diffs | netrun/filter_htmlpre.pl
+	fi
 	echo '</TD></TR></TABLE>'
 	exit 1
 }
@@ -36,7 +44,7 @@ grade_prog() {
 run_prog
 
 # Diff the program's output with the known-good output:
-echo "$out" | diff $0.out - > $0.diffs
+echo "$out" | diff -a $0.out - > $0.diffs
 # if [ $? -ne 0 ]
 if [ "$out" != "`cat $0.out`" ]
 then
@@ -151,7 +159,7 @@ grep_bad() {
 	if [ "$2" = "code.S" ]
 	then
 		# Strip out assembly comments
-		matches=`sed -e 's/;.*//' "$2" | grep "$1"`
+		matches=`grep -v netrun "$2" | sed -e 's/;.*//' | grep "$1"`
 	elif [ "$2" = "code.cpp" ]
 	then
 		# Strip out C++ comments
