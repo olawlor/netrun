@@ -16,7 +16,7 @@ foreach $line (<>) {
         $line =~ s/([<>&\"])/$escapes{$1}/eg;
         print "$line";
 	$count=$count+1;
-	if ($count>1000) {goto end;}
+	if ($count>10000) {goto end;}
 }
 end:
 print "</pre>\n";
