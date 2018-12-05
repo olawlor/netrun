@@ -72,6 +72,7 @@ __asm__( /* Register-saving assembly-callable stack print */
 
 #include <signal.h>
 #include <ucontext.h>
+#include <sys/ucontext.h>
 #ifdef SOLARIS /* needed with at least Solaris 8 */
 #include <siginfo.h>
 #endif
@@ -101,7 +102,7 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 
 #if defined(__amd64__) /* x86-64 */
 	{
-	struct ucontext *uc=(struct ucontext *)ucontextv;
+	ucontext_t *uc=(ucontext_t *)ucontextv;
 	struct sigcontext *r=(struct sigcontext *)(&uc->uc_mcontext);
 	printf("Registers:  rip=0x%16lx\n"
 		"  rax=0x%16lx  rbx=0x%16lx  rcx=0x%16lx   rdx=0x%16lx\n"
@@ -122,7 +123,7 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	}
 #elif defined(__i386__) /* x86 (e.g., Pentium 4) */
 	{
-	struct ucontext *uc=(struct ucontext *)ucontextv;
+	ucontext_t *uc=(ucontext_t *)ucontextv;
 	struct sigcontext *r=(struct sigcontext *)(&uc->uc_mcontext);
 	printf("Registers:  eip=0x%08lx\n"
 		"  eax=0x%08lx  ebx=0x%08lx  ecx=0x%08lx   edx=0x%08lx\n"
@@ -138,7 +139,7 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	}
 #elif defined(__PPC__) /* PowerPC (e.g., Power Macintosh) */
 	{
-	struct ucontext *uc=(struct ucontext *)ucontextv;
+	ucontext_t *uc=(ucontext_t *)ucontextv;
 	printf("ucontext: %p\n",uc);
 	struct sigcontext *mc=(struct sigcontext *)(&uc->uc_mcontext);
 	printf("sigcontext: %p\n",mc);
@@ -156,7 +157,7 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	}
 #elif defined(__arm__) 
 	if (0) printf("ARM machine detected\n");
-	struct ucontext *uc=(struct ucontext *)ucontextv;
+	ucontext_t *uc=(ucontext_t *)ucontextv;
 	if (0) printf("ucontext: %p\n",uc);
 	struct sigcontext *mc=(struct sigcontext *)(&uc->uc_mcontext);
 	if (0) printf("sigcontext: %p\n",mc);
