@@ -17,3 +17,4 @@ Lots of supporting documentation still needs to be built!
 It was built by Dr. Orion Lawlor (lawlor@alaska.edu) starting in 2005, 
 mostly for his computer architecture and programming courses.
 
+License: public domain
