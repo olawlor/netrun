@@ -1,0 +1,361 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>NetRun Help</title></head>
+<body>
+<h1>NetRun Help</h1>
+
+<h2>Logging In</h2>
+<p>If you don't yet have an account, or lost or don't trust
+your randomly generated password, you can 
+<a href="pwreset">reset your NetRun password here</a>.&nbsp; NetRun passwords are long randomly generated strings.  Sorry, there's currently no way to set a custom password!
+
+</p><p>The password reset script mails your randomly generated password
+to your UAF email address. If you need to reset your UAF email
+password, call the helpdesk at 474-6564. Once you have your NetRun
+password,
+you can log in to <a href="run">netrun</a>.
+
+
+</p><h2>How your Code Runs<br>
+</h2>
+<p>NetRun's default mode is "Inside a function".&nbsp; In this
+mode, the code you write becomes the center of a function named "foo";
+like this:<br>
+<div style="margin-left: 40px;">
+<pre>int foo(void) {<br><span style="font-style: italic;">   YOUR CODE HERE</span><br>}<br></pre>
+</div>
+If you want to declare your own new functions, switch the Mode popup to
+"Whole function (file)".&nbsp; NetRun's main program will still try
+to call a function named "foo", so you have to name your top-level
+function foo.<br>
+<br>
+If you want to write your own complete main program, switch the Mode
+popup to "Whole program (main)".&nbsp; None of the builtin NetRun code
+will be included, and you can define any functions you like.&nbsp;
+You'll need to #include "lib/inc.c" to get the builtin NetRun functions like print_int. <br>
+<br>
+See also the <a href="examples.html">Big List of NetRun Example Programs</a>.
+
+
+<h2>Saved Files</h2>
+
+
+<p>NetRun automatically saves everything you run under the "Run name:" 
+you enter. You can then go back to the saved version by clicking the 
+"Saved files:" link at the bottom of the page. If you use the same "Run 
+name" twice, it overwites the previous version. Be careful--this makes 
+debugging easier, but it also allows you to overwrite work!<br>
+</p>
+
+Saved files with the same "prefix" are displayed together on one
+line.&nbsp; NetRun defines a "prefix" as the whole run name up to the
+first space, underscore or dot.&nbsp; So runs named "foo.bar",
+"foo_you", and "foo is my name" will all show up under the line "foo:";
+while "foobar" will get listed on its own line.<br>
+<h2>Header Files<br>
+</h2>
+<p>A selection of useful header files are automatically included by NetRun.&nbsp; Currently, NetRun automatically includes:<br>
+
+</p>
+<pre style="">#include &lt;stdio.h&gt;<br>#include &lt;stdlib.h&gt;<br>#include &lt;ctype.h&gt;<br>#include &lt;string.h&gt;<br>#include &lt;math.h&gt;<br>#include &lt;iostream&gt;<br>#include &lt;iomanip&gt;<br>#include &lt;vector&gt;<br>#include &lt;map&gt;<br>#include &lt;string&gt;<br>#include "lib/inc.h"</pre>
+
+The only NetRun-specific header is "lib/inc.h".&nbsp; The functions in lib/inc.h are documented below.<br>
+
+<br>
+If you need to include additional headers, just switch to Whole
+Function or Whole Program mode, and write the appropriate #include.<br>
+<p>
+
+
+
+</p>
+<h2>Keyboard Shortcuts</h2>
+<p>NetRun uses the <a href="https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts">Ace editor keyboard shortcuts</a> in the edit area.
+Ctrl-Shift-R will run it on most browsers.
+
+
+<h2>Builtin NetRun Functions<br>
+</h2>There are a bunch of handy functions built in to NetRun.&nbsp; You
+can see how they work if you check the project/lib/inc.c file inside
+"Download this file as a .tar archive".&nbsp; In no particular order,
+the functions are:<br>
+<ul>
+<a name="read_input">
+  <li>long <span style="font-style: italic;">read_input</span>(void);<br>
+Reads one long integer from the standard input.&nbsp; Hit the "Input"
+checkbox to get the input box, and type integers into this box.&nbsp;
+This function accepts any C/C++ formatted integer, so 0x10 is actually
+treated as hex.&nbsp; The function will complain if it can't parse an
+integer.<br>
+    <span style="font-weight: bold;">
+Example</span>: long i=read_input(); // i now contains value read from "Input data" box.<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="read_float">
+  <li>float <span style="font-style: italic;">read_float</span>(void);<br>
+Reads one floating point number from the standard input.<br>
+    <span style="font-weight: bold;">
+Example</span>: float f=read_float(); // f now contains value read from "Input data" box.<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="read_string">
+  <li>int <span style="font-style: italic;">read_string</span>(const char *dest);<br>
+Read a C string of up to 100 characters from standard input.<br>
+    <span style="font-weight: bold;">
+Example</span>: char str[100]; read_string(str);<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="print_int">
+  <li>void <span style="font-style: italic;">print_int</span>(int i);<br>
+Print out an integer, in both decimal and hexadecimal.<br>
+    <span style="font-weight: bold;">
+Example</span>: print_int(0xff); // Prints 255 and 0xff.<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="print_long">
+  <li>void <span style="font-style: italic;">print_long</span>(long i);<br>
+Print out a long (64-bit) integer, in both decimal and hexadecimal.<br>
+    <span style="font-weight: bold;">
+Example</span>: print_long(0x123456789abcdefLL); // Prints 64-bit constant.<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="print_float">
+  <li>void <span style="font-style: italic;">print_float</span>(float f);<br>
+Print out a 32-bit floating point number.  This is especially useful 
+from assembly language.<br>
+    <span style="font-weight: bold;">
+Example</span>: print_float(1.234); // Prints a float.<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="time_in_seconds">
+  <li>double <span style="font-style: italic;">time_in_seconds</span>(void);<br>
+Returns the current wall-clock time, in seconds.&nbsp; The timer
+resolution is milliseconds on UNIX machines, but only 60ms on Windows.<br>
+    <span style="font-weight: bold;">
+Example</span>: double t=time_in_seconds(); // t now contains the wall-clock time<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="time_function">
+  <li>double <span style="font-style: italic;">time_function</span>(timeable_fn fn);<br>
+Returns the number of seconds taken by one execution of this user
+function.&nbsp; The function is run many times, in order to stay
+accurate even with coarse timers.&nbsp; A "timeable_fn" is just a
+function that takes no arguments and returns an int.<br>
+    <span style="font-weight: bold;">
+Example</span>: double t=time_function(bar); // bar takes t seconds per call<br>
+&nbsp;
+    <br>
+  </li>
+<a name="print_time">
+  <li>void <span style="font-style: italic;">print_time</span>(const char *fnName,timeable_fn fn);<br>Prints
+out the speed of this function, in time per call.&nbsp; "fnName" is
+just used for the printout.&nbsp; The "Time" checkbox (under "Actions")
+actually calls print_time on the central foo function, although it
+always prints foo's time in nanoseconds.<br>
+    <span style="font-weight: bold;">
+Example</span>: print_time("Bar function takes",bar); // Prints time taken by bar function<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="iarray_print">
+  <li>int <span style="font-style: italic;">iarray_print</span>(int *arr,int n);<br>
+Print out the entries in this n-element int (DWORD) array.&nbsp; Will only
+print selected values for arrays with more than 10 elements.&nbsp;
+Always returns n.<br>
+    <span style="font-weight: bold;">
+Example</span>: int arr[7]=...; iarray_print(arr,7);<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="larray_print">
+  <li>int <span style="font-style: italic;">larray_print</span>(long *arr,long n);<br>
+Print out the entries in this n-element long (QWORD) array.&nbsp; Will only
+print selected values for arrays with more than 10 elements.&nbsp;
+Always returns n.<br>
+    <span style="font-weight: bold;">
+Example</span>: long arr[7]=...; larray_print(arr,7);<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="farray_print">
+  <li>int <span style="font-style: italic;">farray_print</span>(float *arr,int n);<br>
+Print out the entries in this n-element float array.&nbsp; Will only
+print selected values for arrays with more than 10 elements.&nbsp;
+Always returns n.<br>
+    <span style="font-weight: bold;">
+Example</span>: float arr[7]=...; farray_print(arr,7);<br>
+&nbsp;
+    <br>
+  </li>
+<a name="farray_fill">
+  <li>void <span style="font-style: italic;">farray_fill</span>(float *f,int n,float tol);<br>
+Fills up this array with more or less random floating-point
+values.&nbsp; Always puts a fixed value in f[n].&nbsp; The values will
+range from 0 to 255*tol.<br>
+    <span style="font-weight: bold;">
+Example</span>: float f[11]; farray_fill(f,10,1.0); // Fills up f[0..10] with random values.<br>
+&nbsp; <br>
+  </li>
+<a name="farray_checksum">
+  <li>int <span style="font-style: italic;">farray_checksum</span>(float *f,int n,float tol);<br>
+Computes the checksum of the floating-point values in this array.&nbsp; Checks the fixed value in f[n] put there by farray_fill.<br>
+    <span style="font-weight: bold;">
+Example</span>: return farray_checksum(f,10,1.0); // Returns a 16-bit 
+checksum of the values in the array. <br><br>
+</li>
+
+<a name="dump_ascii">
+  <li>void <span style="font-style: italic;">dump_ascii</span>(void *ptr,long bits);<br>
+Print out the data at this pointer as ASCII byte values.
+Keeps printing for the specified number of bits.<br>
+    <span style="font-weight: bold;">
+Example</span>: const char *p="yo"; dump_ascii(p,16);<br>
+&nbsp;
+    <br>
+
+<a name="dump_hex">
+  <li>void <span style="font-style: italic;">dump_hex</span>(void *ptr,long bits);<br>
+Print out the data at this pointer as hexadecimal byte values.
+Keeps printing for the specified number of bits.<br>
+    <span style="font-weight: bold;">
+Example</span>: long x=3; dump_hex(&amp;x,64);<br>
+&nbsp;
+    <br>
+
+<a name="dump_binary">
+  <li>void <span style="font-style: italic;">dump_binary</span>(void *ptr,long bits);<br>
+Print out the data at this pointer as binary bit values.
+Keeps printing for the specified number of bits.<br>
+    <span style="font-weight: bold;">
+Example</span>: long x=3; dump_binary(&amp;x,64);<br>
+&nbsp;
+    <br>
+
+  </li>
+<a name="cat">
+  <li>void <span style="font-style: italic;">cat</span>(const char *fileName);<br>
+Print out the contents of the given file.  Automatically detects binary 
+files, and switches to hex output.  Only outputs the first 1000 characters 
+of the file.<br>
+    <span style="font-weight: bold;">
+Example</span>: cat("code.exe"); // prints the compiled executable<br>
+</li>
+
+</ul>All these functions are accessible from both C and C++, and they work the same way in both languages.<br>
+
+<h2>Debugging in Assembly Language<br>
+</h2>
+
+
+<p>The main program prints out the value returned from the "foo"
+function you write, and x86 functions return their value in register eax,
+so you can see what's in register eax by just returning--it'll get printed out.
+
+</p><p>At the moment, there's no easy way to see what's in all the registers
+other than intentionally crashing, like doing a read-from-NULL:
+</p><pre>	mov eax,[0]<br></pre>You get an informative printout when you
+crash because NetRun registers a whole set of signal handlers (for
+segmentation fault, floating point exception, illegal instruction,
+etc.).&nbsp; If you're interested in how this works, use the "Download
+this file as a .tar archive" link and read project/lib/signal.c.
+
+
+<a name="read_input_asm">
+<h2>Reading Input in Assembly<br>
+</h2>
+
+<ol>
+<li>Say "extern read_input" and "call read_input" as the FIRST TWO LINES in your assembly 
+program.&nbsp;
+This function may trash (i.e., change) all other registers, so be sure
+to call it before doing anything else!&nbsp;&nbsp;read_input, like any 
+function, returns its value in the eax register. </li><li>Use eax as input to whatever computation you need to do.</li>
+<li>In the NetRun GUI, click "Input" checkbox to display the input 
+data edit box.</li>
+<li>Enter the program's input data--just numbers--in the input data edit 
+box.</li>
+<li>Hit "Run!".&nbsp; The program will read the input you've typed 
+in.</li>
+</ol>
+
+You can call "read_input" from C or C++, too--it takes no parameters, and 
+returns the integer read in.<br>
+
+<!--
+
+<h2>NetRun Examples</h2>
+Here are some short example programs showing all the modes of NetRun.
+
+-->
+
+<h2>NetRun Output Images</h2>
+NetRun automatically displays an image if your program writes 
+a image file named "out.ppm", stored in the <a href="http://netpbm.sourceforge.net/doc/ppm.html">PPM image format</a>.
+Here's a <a href="http://www.cs.uaf.edu/2009/fall/cs441/lecture/11_19_mandelbrot_compare.html">complete out.ppm example program</a>.
+
+
+<h2>NetRun Hardware</h2>
+The NetRun "P4" machine is an Intel Pentium 4 running at 2.8GHz.  Hyperthreading is enabled, with 
+two CPU frontends sharing the same arithmetic backend.  The L2 cache is 1024KB.
+
+
+<h2>Security in NetRun and Terms of Use</h2>
+You are welcome to do any of the following using NetRun!
+<ul>
+ <li>Run performance experiments, debug code, and explore new 
+languages and architectures.
+ <li>Solve homework assignments for any course.
+ <li>Try out example code from the lecture notes.
+</ul>
+The main NetRun CGI is a Perl script.&nbsp; You're welcome to download that Perl script, using the "<a href="https://lawlor.cs.uaf.edu/netrun/run?tarballA=1">Download all saved files as a big .tar.gz archive</a>"
+link.&nbsp; This Perl script runs in taint mode, and uses regular
+expressions to check for dangerous characters in the input data.&nbsp;
+It has extensive logging, and everything you run is marked with your
+username.&nbsp; This means you should not attempt to hack into 
+NetRun itself, or use NetRun to attack other machines.  <br>
+<br>
+You are not allowed to: share your NetRun account; 
+denial-of-service or hack into NetRun; use NetRun to 
+attack other machines; or use NetRun for any illegal, commercial, 
+or partisan political purpose.  Keep in mind the surprisingly 
+open-ended Alaska statute <a 
+href="http://touchngo.com/lglcntr/akstats/Statutes/Title11/Chapter46/Section740.htm">AS11.46.740</a> 
+makes "criminal use of a computer" a class C felony.<br>
+<br>
+Your executable programs run with a variety of restrictions, enforced by the kernel:<br>
+<ul>
+  <li>You cannot run for more than 2 seconds, or NetRun will print "Killing program--ran too long!".<br>
+  </li>
+  <li>You cannot use more than 1 GB of memory, or further allocations just fail.</li>
+  <li>Your program is running in a "chroot" jail, so you can't access any files on the machine.</li>
+  <li>Your program runs as a nobody user.&nbsp; You have no rights.<br>
+  </li>
+</ul>
+To go beyond these restrictions, download a tar file of your 
+project, and run it on your own machine!<br>
+
+
+
+
+
+<hr>
+<p align="right"><a href="http://lawlor.cs.uaf.edu/%7Eolawlor/">O. 
+Lawlor</a>, <a href="mailto:lawlor@alaska.edu">lawlor@alaska.edu</a><br><a href="http://www.cs.uaf.edu">CS</a>, <a href="http://www.uaf.edu/">UAF</a><br>
+
+</p></body></html>
