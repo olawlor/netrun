@@ -1,1 +1,0 @@
-../../../project/lib/main.cpp
