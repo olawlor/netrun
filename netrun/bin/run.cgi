@@ -1529,7 +1529,7 @@ class gpu_mem_clear_at_startup { public:
 
 ' . $srcpre;
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
+		$compiler='nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib  -lcurand_static   -lculibos  ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();  # -Wall kills it
