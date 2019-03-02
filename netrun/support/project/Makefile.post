@@ -95,6 +95,7 @@ netrun/scripting: $(USER_CODE)
 	@-netrun/run.sh "Run" "$(USER_CODE)" $(SAFERUN) $(USER_CODE)
 	@- HWNUM=$(HWNUM) student=$(STUDENT) netrun/run_if_exists.sh \
 		netrun/grade.sh $(SAFERUN) $(USER_CODE)
+	@make -s netrun/image
 
 netrun/spice: $(USER_CODE)
 	@netrun/run.sh "Simulator" "$(USER_CODE)" spiceplot $(USER_CODE) out.jpg
