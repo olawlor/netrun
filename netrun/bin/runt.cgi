@@ -686,20 +686,21 @@ END_ACE
 			'MPI',
 			'CUDA',
 			'GPGPU',
-			'OpenCL',
+#			'OpenCL',
 			'CBMC',
 			'Python',
 			'Python3',
 			'Perl',
+			'Postscript',
 			'PHP',
 			'JavaScript',
 			'Ruby',
 			'Bash',
 			'Prolog',
-			'glfp',
-			'glsl',
-			'funk_emu',
-			'spice',
+#			'glfp',
+#			'glsl',
+#			'funk_emu',
+#			'spice',
 			'vhdl'],
 			-labels=>{'Assembly' => 'Assembly-GNU',
 				'glfp' => 'OpenGL Fragment Program',
@@ -1419,6 +1420,11 @@ section .text
 		$netrun='netrun/scripting';
 		$srcext='pl';
 		$saferun=$scriptrun . '/usr/bin/perl '
+	}
+	elsif ( $lang eq "Postscript") {
+		$netrun='netrun/scripting';
+		$srcext='ps';
+		$saferun=$scriptrun . '/usr/bin/gs_run < '
 	}
 	elsif ( $lang eq "PHP") {
 		$netrun='netrun/scripting';
