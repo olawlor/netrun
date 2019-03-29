@@ -732,6 +732,11 @@ END_ACE
 			-values=>['void','long','int','double','float','std::string'],
 			-default=>['void']),
 		")\n";
+	print
+		"<p>&nbsp;&nbsp;",
+		$q->checkbox_group(-name=>'repeat',
+			-values=>['Re-run foo until input ends'],
+			-defaults=>[]),"\n";
 
 	print
 		"<p>Machine:",
@@ -1044,8 +1049,12 @@ sub create_project_directory {
 		}
 		else {
 			push(@lflags,"-DTIME_FOO=1");
-			$main="lib/main.cpp"; # Must recompile main.cpp with timing enabled
+			$main="include/lib/main.cpp";
 		}
+	}
+	if (grep(/^Re/,$q->param('repeat'))==1) {
+		push(@lflags,"-DREPEAT_FOO=1");
+		$main="include/lib/main.cpp";
 	}
 	if (grep(/^Profile$/, @orun)==1) {
 		push(@cflags,"-pg");
@@ -1125,7 +1134,7 @@ using std::cin;
 		}
 		# FIXME: fortran name mangling is platform-dependent!
 		push(@lflags,"-Dfoo=foo_");
-		$main="lib/main.cpp"; # Must recompile main.cpp with new foo name
+		$main="include/lib/main.cpp";  # Recompile with fortran foo name
 	}
 	elsif ( $lang eq "Haskell") { # Fails with mkTextEncoding: invalid argument
 		$compiler="ghc";
@@ -1133,7 +1142,7 @@ using std::cin;
 		$srcext="hs";
 		$srcpre="";
 		$srcpost="";
-		$main=""; # Disable C-style main
+		$main="";  # no C++ main
 	}
 	elsif ( $lang eq "Prolog") { 
 		$compiler="gplc";
