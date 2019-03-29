@@ -808,17 +808,7 @@ END_ACE
 	}
 
 	print "<hr>";
-	if (0) {
-		print "Announcements:
-	<UL>
-		<li>ACE editor support (2016-02-05, thanks to Noah Betzen)
-		<li>Disqus comments for homeworks after OK! (2014-08-22)
-		<li>foo can take or return long, string, etc.  (2014-08-20)
-		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
-	</UL>
-	";
-	}
-	print "Version 2018-08-24";
+	print "Version 2019-03-28";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -1090,7 +1080,8 @@ sub create_project_directory {
 #include <map>
 #include <string>
 #include "lib/inc.h"
-using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code */
+using std::cout;
+using std::cin;
 
 ' . $gradecode;
 		if ($mode eq 'main') { # whole program, with headers
