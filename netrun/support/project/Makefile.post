@@ -1,9 +1,10 @@
 # Makefile fragment: meant to be included by main Makefile
 #  after defining some variables.
 
+CFLAGS += -I. -Iinclude
 USER_OBJ=$(NAME).obj
 PROGRAM=$(NAME).exe
-NR_DEP=$(MAIN) lib/inc.h lib/inc.c lib/signals.c
+NR_DEP=$(MAIN) include/lib/inc.h include/lib/inc.c include/lib/signals.c
 NR=$(MAIN) 
 
 all: $(PROGRAM)
@@ -30,7 +31,7 @@ netrun/obj: $(USER_CODE)
 		$(COMPILER) $(SRCFLAG) $(USER_CODE) $(OUTFLAG) $(USER_OBJ)
 
 main.obj:
-	@ $(LINKER) -c lib/main.cpp -o $@
+	@ $(LINKER) -c include/lib/main.cpp -o $@
 
 netrun/link: $(LINKWITH) netrun/obj $(NR_DEP) 
 	-@ netrun/run.sh "Link" "$(USER_CODE)" \
