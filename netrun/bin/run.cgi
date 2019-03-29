@@ -693,6 +693,7 @@ END_ACE
 			'Perl',
 			'Postscript',
 			'PHP',
+			'Scheme',
 			'JavaScript',
 			'Ruby',
 			'Bash',
@@ -1430,6 +1431,12 @@ section .text
 		$netrun='netrun/scripting';
 		$srcext='php';
 		$saferun=$scriptrun . '/usr/bin/php '
+	}
+	elsif ( $lang eq "Scheme") {
+		$netrun='netrun/scripting';
+		$srcext='scm';
+		$srcpre .= '(define (print thing) (display thing) (display "\n"))';
+		$saferun=$scriptrun . '/usr/bin/mit-scheme-x86-64 --load '
 	}
 	elsif ( $lang eq "JavaScript") {
 		$srcpre .= "function print() {console.log.apply(null,arguments);}\n";
