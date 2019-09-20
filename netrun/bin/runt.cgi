@@ -227,17 +227,6 @@ function startupCode() {
 <script src='ui/jquery-ui.min.js'></script>
 
 
-<!-- Global Site Tag (gtag.js) - Google Analytics -->
-<script async src='https://www.googletagmanager.com/gtag/js?id=UA-106859486-1'></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments)};
-  gtag('js', new Date());
-
-  gtag('config', 'UA-106859486-1');
-</script>
-
-
 <style type='text/css' media='screen'>
 input, textarea, pre {
 	font-family: monospace,sans-serif,courier;
@@ -678,6 +667,7 @@ END_ACE
 			'C++',
 			'C++0x',
 			'C++14',
+			'C++17',
 			'C',
 			'Assembly-NASM',
 			'Assembly',
@@ -708,7 +698,6 @@ END_ACE
 				'glsl' => 'OpenGL Shader Language (GLSL)',
 				'spice' => 'SPICE Analog Circuit',
 				'C++0x' => 'C++11',
-				'C++14' => 'C++14',
 				'vhdl' => 'VHDL Digital Circuit'},
 			-default=>['C++0x']),"\n";
 
@@ -1065,7 +1054,7 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
+	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
@@ -1073,6 +1062,7 @@ sub create_project_directory {
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp -msse3 $(CFLAGS)';}
 		if ($lang eq "C++0x") {$compiler=$linker='g++ -fopenmp -std=c++0x $(CFLAGS)';}
 		if ($lang eq "C++14") {$compiler=$linker='g++ -fopenmp -std=c++14 $(CFLAGS)';}
+		if ($lang eq "C++17") {$compiler=$linker='g++ -fopenmp -std=c++17 $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -1174,6 +1164,7 @@ using std::cin;
 
 	}
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
+		push(@cflags,"-no-pie"); # avoid relocation warning
 		$compiler="nasm -f elf32 ";
 		$srcext="S";
 		$srcpre .='
