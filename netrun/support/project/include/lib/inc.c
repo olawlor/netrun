@@ -20,7 +20,18 @@ long read_input(void) {
 	if (timer_only_dont_print) return 0;
 	printf("Please enter an input value:\n");
 	fflush(stdout);
-	if (1!=scanf("%li",&ret)) {
+/*	if (1!=scanf("%li",&ret))  //<- crashes if the stack is misaligned */
+	char buf[1024];
+	if (0!=fgets(buf,sizeof(buf),stdin))
+	{
+		if (buf[0]=='0' && buf[1]=='x') {
+			ret=strtol(buf,NULL,16); /* hex input */
+		} else {
+			ret=strtol(buf,NULL,10); /* decimal input */
+		}
+	}
+	else
+	{
 		if (feof(stdin))
 			printf("read_input> No input to read!  Exiting...\n");
 		else
@@ -28,9 +39,11 @@ long read_input(void) {
 		exit(1);
 	}
 	if (ret<0) /* 32-bit output, for backward compatibility */
-		printf("read_input> Returning %ld (0x%X)\n",ret,(int)ret);
+		snprintf(buf,sizeof(buf),"read_input> Returning %ld (0x%X)",ret,(int)ret);
 	else
-		printf("read_input> Returning %ld (0x%lX)\n",ret,ret);
+		snprintf(buf,sizeof(buf),"read_input> Returning %ld (0x%lX)",ret,ret);
+	puts(buf);
+	fflush(stdout);
 	return ret;
 }
 
@@ -69,7 +82,13 @@ void print_int(int i) {
 }
 void print_long(long i) {
 	if (timer_only_dont_print) return;
+#if 0 /* 2019-09-09: workaround for bug where printf requires an aligned stack */
 	printf("Printing integer %ld (0x%lX)\n",i,i);
+#else
+	char buf[1024];
+	snprintf(buf,sizeof(buf),"Printing integer %ld (0x%lX)", i,i);
+	puts(buf);
+#endif
 }
 void print_float(float f) {
 	if (timer_only_dont_print) return;
@@ -195,25 +214,36 @@ int iarray_print(int *arr,int n)
 	return n;
 }
 
+void larray_length_print(long n) {
+	char buf[1024];
+	snprintf(buf,sizeof(buf),"larray_print: %ld elements",n);
+	puts(buf);
+}
+void larray_item_print(long *arr,long i) {
+	char buf[1024];
+	snprintf(buf,sizeof(buf),"  arr[%ld]=%ld  (0x%08lx)",i,arr[i],arr[i]);
+	puts(buf);
+}
+
 long larray_print(long *arr,long n)
 {
 	long i=0,p;
-	if (n<0 || n>1000000) {
-		printf("ERROR in larray_print: passed invalid number of elements %ld (0x%08lx) for array %p.  Did you pass the arguments in the wrong order?\n",
-			n,n,arr);
-		exit(1);
-	}
 	if (timer_only_dont_print) return n;
 	p=n;
 	if (p>10) p=10; /* Only print first 10 elements */
-	printf("larray_print: %ld elements\n",n);
-	for (i=0;i<p;i++)
-		printf("  arr[%ld]=%ld  (0x%08lx)\n",i,arr[i],arr[i]);
+	larray_length_print(n);
+	if (n<0 || n>1000000) {
+		puts("ERROR in larray_print: passed invalid number of elements (are arguments correct?)");
+		// %ld (0x%08lx) for array %p.  Did you pass the arguments in the wrong order?\n",n,n,arr);
+		exit(1);
+	}
+	for (i=0;i<p;i++) 
+		larray_item_print(arr,i);
 	if (p<n) {
 		i=n/2;
-		printf("  arr[%ld]=%ld  (0x%08lx)\n",i,arr[i],arr[i]);
+		larray_item_print(arr,i);
 		i=n-1;
-		printf("  arr[%ld]=%ld  (0x%08lx)\n",i,arr[i],arr[i]);
+		larray_item_print(arr,i);
 	}
 	return n;
 }

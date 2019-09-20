@@ -49,8 +49,8 @@ int trash_eax(void); // trashes return value register
   and generate the argument and/or handle the return type. */
 template <typename R,typename A>
 int netrun_call( R (*foofn)(A) ) {
-	register A arg=netrun_get_arg(A());
-	register int e=trash_eax();
+	A arg=netrun_get_arg(A());
+	int e=trash_eax();
 	netrun_handle_ret(foofn(arg));
 	return e;
 }
@@ -62,8 +62,8 @@ void netrun_call( R (*foofn)() ) {
 
 template <typename A>
 int netrun_call( void (*foofn)(A) ) {
-	register A arg=netrun_get_arg(A());
-	register int e=trash_eax();
+	A arg=netrun_get_arg(A());
+	int e=trash_eax();
 	foofn(arg);
 	return e;
 }
@@ -105,8 +105,8 @@ bool netrun_data_readable(void) {
 int g0=0xf00d00, g1=0xf00d01, g2=0xf00d02, g3=0xf00d03, g4=0xf00d04, g5=0xf00d05, g6=0xf00d06, g7=0xf00d07;
 
 int main() {
-	int local=0x1776; /* stored on stack */
-	register long l0=g0,l1=g1,l2=g2,l3=g3,l4=g4,l5=g5,l6=g6,l7=g7; /* stored in registers */
+	int local=0x1776; /* stored on stack? */
+	long l0=g0,l1=g1,l2=g2,l3=g3,l4=g4,l5=g5,l6=g6,l7=g7; /* stored in registers */
 	handle_signals();
 	
 #ifdef TIME_FOO /* Timing mode */
@@ -123,7 +123,13 @@ int main() {
 "Either some preserved registers were overwritten,\n"
 "or else part of the stack was changed or overwritten!\n");
 
-	} while (netrun_data_readable());
+	} while (
+#if REPEAT_FOO
+		netrun_data_readable()
+#else
+		0
+#endif
+	);
 	
 	exit(0);
 }
