@@ -1056,6 +1056,7 @@ sub create_project_directory {
 # Language switch
 	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
+                push(@cflags,"-no-pie"); # avoids overflow in R_X86_64_PC32
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
@@ -1095,6 +1096,7 @@ using std::cin;
 	}
 	elsif ( $lang eq "C") { ############# C
 		$compiler='gcc -fomit-frame-pointer $(CFLAGS)'; 
+                push(@cflags,"-no-pie"); # avoids overflow in R_X86_64_PC32
 		$srcext="c";
 		$srcpre='/* NetRun C Wrapper (Public Domain) */
 #include <stdio.h>
