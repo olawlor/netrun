@@ -18,8 +18,6 @@ long read_input(void) {
 	long ret=0;
 
 	if (timer_only_dont_print) return 0;
-	printf("Please enter an input value:\n");
-	fflush(stdout);
 /*	if (1!=scanf("%li",&ret))  //<- crashes if the stack is misaligned */
 	char buf[1024];
 	if (0!=fgets(buf,sizeof(buf),stdin))
@@ -32,12 +30,15 @@ long read_input(void) {
 	}
 	else
 	{
-		if (feof(stdin))
-			printf("read_input> No input to read!  Exiting...\n");
-		else
+		if (feof(stdin)) {
+			exit(0);
+			//printf("read_input> No input to read!  Exiting...\n");
+		} else
 			printf("read_input> Invalid input format!  Exiting...\n"); 
 		exit(1);
 	}
+	printf("Please enter an input value:\n");
+	fflush(stdout);
 	if (ret<0) /* 32-bit output, for backward compatibility */
 		snprintf(buf,sizeof(buf),"read_input> Returning %ld (0x%X)",ret,(int)ret);
 	else
@@ -111,7 +112,7 @@ double time_in_seconds(void) { /* This seems to give terrible resolution (60ms!)
 }
 #else /* UNIX or other system */
 #  include <sys/time.h> //For gettimeofday time implementation
-#  define time_in_seconds_granularity 0.001 /* seconds */
+#  define time_in_seconds_granularity 0.002 /* seconds */
 double time_in_seconds(void) {
 	struct timeval tv;
 	gettimeofday(&tv,NULL);

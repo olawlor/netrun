@@ -26,6 +26,7 @@ template <typename T>
 T netrun_get_arg(T dummy) {
 	T r=T();
 	std::cin>>r;
+	if (!std::cin) exit(0);
 	return r;
 }
 long netrun_get_arg(long dummy) { return read_input(); }
@@ -72,33 +73,6 @@ void netrun_call( void (*foofn)() ) {
 	foofn();
 }
 
-/** This is designed to keep calling our input-consuming code until EOF */
-bool netrun_data_readable(void) {
-	std::istream &is=std::cin;
-	static long last_whitespace=1;
-	if (!is) return false; // EOF bit set (stream is done)
-	
-	long this_whitespace=0;
-	// Skip whitespace, while checking for EOF
-	while (true) {
-		int c=is.get(); // read character
-		if (c==EOF) return false; // no data left
-		else if (c=='\r' || c=='\n' || c==' ' || c=='\t') {
-			this_whitespace++;
-			continue;
-		}
-		else // a real character--throw it back and leave.
-		{ 
-			is.putback((char)c);  
-			break; 
-		}
-	}
-	
-	if (this_whitespace==0 && last_whitespace==0) return false; // didn't read anything
-	last_whitespace=this_whitespace;
-
-	return true;
-}
 #endif
 
 /* This junk is used to detect modifications to preserved registers: */
@@ -125,7 +99,7 @@ int main() {
 
 	} while (
 #if REPEAT_FOO
-		netrun_data_readable()
+		std::cin
 #else
 		0
 #endif

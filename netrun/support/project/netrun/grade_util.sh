@@ -26,7 +26,7 @@ bad_diffs() {
 	else
 		echo "$out" | netrun/filter_htmlpre.pl
 	fi
-	echo "but instead your program returned:"
+	echo "but your program returned:"
 	cat $0.out | netrun/filter_htmlpre.pl
 	if [ -z "$outsecret" ]
 	then
@@ -174,6 +174,19 @@ grep_bad() {
 		bad "$3"
 	fi
 }
+
+# Actual output is double secret, stored in fixed file
+#  double_secret 493hw1_0 2019
+double_secret() {
+	outsecret="Program complete.  Return 'REDACTED'"
+	out=`grep "$1" /netrun_answers/"$2" | awk -F: '{print $2}'`
+	if [ -z "$out" ]
+	then
+		echo 'Correct answers not found--email <a href="mailto:lawlor@alaska.edu">Dr. Lawlor</a> to fix this problem.'
+		exit 1
+	fi
+}
+
 
 # Finished grading--all tests passed!
 grade_done() {
