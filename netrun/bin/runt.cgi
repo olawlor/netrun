@@ -1170,7 +1170,7 @@ using std::cin;
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
 		push(@cflags,"-no-pie"); # avoid relocation warning
 		$compiler="nasm -f elf32 ";
-		$linker="g++ -fopenmp -no-pie ";
+		$linker='g++ -fopenmp -no-pie $(CFLAGS) ';
 		$srcext="S";
 		$srcpre .='
 section .text
