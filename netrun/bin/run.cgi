@@ -1056,14 +1056,16 @@ sub create_project_directory {
 # Language switch
 	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
-                push(@cflags,"-no-pie"); # avoids overflow in R_X86_64_PC32
+		if ($lang ne "CUDA" ) {
+			push(@cflags,"-fopenmp"); # accept pragma omp by default
+		}
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
-		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp -msse3 $(CFLAGS)';}
-		if ($lang eq "C++0x") {$compiler=$linker='g++ -fopenmp -std=c++0x $(CFLAGS)';}
-		if ($lang eq "C++14") {$compiler=$linker='g++ -fopenmp -std=c++14 $(CFLAGS)';}
-		if ($lang eq "C++17") {$compiler=$linker='g++ -fopenmp -std=c++17 $(CFLAGS)';}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -msse3 $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++  -std=c++0x $(CFLAGS)';}
+		if ($lang eq "C++14") {$compiler=$linker='g++  -std=c++14 $(CFLAGS)';}
+		if ($lang eq "C++17") {$compiler=$linker='g++  -std=c++17 $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -1168,6 +1170,7 @@ using std::cin;
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
 		push(@cflags,"-no-pie"); # avoid relocation warning
 		$compiler="nasm -f elf32 ";
+		$linker="g++ -fopenmp -no-pie ";
 		$srcext="S";
 		$srcpre .='
 section .text
@@ -1563,6 +1566,7 @@ class gpu_mem_clear_at_startup { public:
 		if ( $lang eq "Assembly-NASM" ) { $srcpost='ret' . $gradepost; }
 	} elsif ($mach eq "skylake64") {
 	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores) <br>\n";
+		
 		$sr_host="skylake";
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "Assembly-NASM") { 
@@ -1580,7 +1584,7 @@ netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
 section .text
 			' . $gradepost;
 		}
-		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx2 -msse2avx"); }
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++14" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-no-pie -msse4.2 -mavx2 -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
 	print "Intel Sandy Bridge i5 2400 (3.1GHz, 4 cores)<br>\n";
@@ -1670,6 +1674,7 @@ section .text
 	print "FYI-- This is an 1.2GHz Raspberry Pi 3 (ARMv71)<br>\n";
 		$sr_host="lawpi3";
 		$sr_port=2983;
+		push(@cflags,"-fopenmp");
 		push(@cflags,"-marm");
 		push(@cflags,"-mfloat-abi=hard");
 		push(@cflags,"-mfpu=neon");

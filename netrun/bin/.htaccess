@@ -1,5 +1,7 @@
 <FilesMatch [cr][ru][a-z]*.cgi >
+
 <Limit GET POST>
+SSLRequireSSL
 AuthName "UAF CS: NetRun Application"
 AuthType Basic
 AuthUserFile /srv/netrun/.htpasswd
