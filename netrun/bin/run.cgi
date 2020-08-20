@@ -228,6 +228,17 @@ function startupCode() {
 
 
 <style type='text/css' media='screen'>
+body {
+	background-color: #141414;
+	color: rgb(200,200,200);
+}
+input{
+	background-color: #202020;
+	color: rgb(200,200,200);
+}
+a:link { color: rgb(100,100,255); }
+a:visited { color: rgb(200,0,200); }
+
 input, textarea, pre {
 	font-family: monospace,sans-serif,courier;
 	font-weight: 900;
@@ -588,7 +599,7 @@ sub print_main_form {
     old_codebox.style.display = "none";
 
     var editor = ace.edit("ace_editor");
-    editor.setTheme("ace/theme/github");
+    editor.setTheme("ace/theme/twilight");
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
     editor.getSession().setMode("ace/mode/c_cpp");
@@ -1993,7 +2004,7 @@ sub my_prefile {
 	my $src=shift;
 	my $linePrint=0;
 	my $lineNo=0;
-	my $bgColor="#CCCCCC";
+	my $bgColor="#404040";
 	while (@_) {
 		my $arg=shift;
 		if ($arg eq "-line") {$linePrint=1;}

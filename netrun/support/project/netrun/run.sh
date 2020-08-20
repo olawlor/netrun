@@ -22,8 +22,8 @@ if [ -s out ]
 then
 	echo "Executing $desc: $@ <br>"
 	
-	color="#CCCCCC"
-	[ $res -ne 0 ] && color="#FF8888"
+	color="#202020"
+	[ $res -ne 0 ] && color="#880000"
 
 	echo '<TABLE><TR><TD BGCOLOR="'$color'">
 <! @NetRun/'$desc'@ begin >'

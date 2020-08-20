@@ -16,7 +16,7 @@ grep -a -v TraceASM $0.out.orig > $0.out
 
 # Exit while complaining about $0.diffs
 bad_diffs() {
-	echo '<TABLE><TR><TD BGCOLOR="#ff8888">'
+	echo '<TABLE><TR><TD BGCOLOR="#800000">'
 	echo "Your output for $desc is not quite right.  For the input:"
 	echo "$in" | netrun/filter_htmlpre.pl 
 	echo "I expected the output:"
@@ -192,7 +192,7 @@ double_secret() {
 grade_done() {
 	# The good "GRADEVAL" argument is found by netrun, and stored for grading.
 	# Subtle: student code can't just printf this, because netrun/filter_htmlpre escapes it.
-	echo '<TABLE><TR><TD BGCOLOR="#88ffff" GRADEVAL="@<YES!>&">'
+	echo '<TABLE><TR><TD BGCOLOR="#00A080" STYLE="color:#FFFFFF" GRADEVAL="@<YES!>&">'
 	echo "$desc output looks OK!"
 	echo '</TD></TR></TABLE>'
 }
