@@ -1,6 +1,5 @@
 /** Simple 2D robot simulator, with image-based debug info. */
-#include "vector3d.h" ///< for 3D vector class vec3 (like GLSL)
-typedef osl::Vector3f vec3;
+#include "vec4.h" ///< for 3D vector class vec3 (like GLSL), with length, dot product, etc.
 
 class mobile_robot;
 

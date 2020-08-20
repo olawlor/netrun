@@ -745,7 +745,7 @@ public:
 	{
 		bignum<BITCOUNT+B_BITCOUNT> dest(0); // make zero-initialized space for full product
 		mul(dest,*this,b);
-		*this = dest.trim<BITCOUNT>(); // copy out low bits
+		*this = dest. template trim<BITCOUNT>(); // copy out low bits
 		return *this;
 	}
 
@@ -825,7 +825,7 @@ public:
 	// Modulo, used by elliptic curve code:
 	template <class bignumRet>
 	inline bignumRet mod(const bignumRet &modby) const {
-		return (*this % modby).trim<bignumRet::NBIT>();
+		return (*this % modby). template trim<bignumRet::NBIT>();
 	}
 
 	// Modular exponentiation, used throughout crypto 
@@ -873,7 +873,7 @@ public:
 			
 			divrem(quot,rem, u3,v3); // divide u3 / v3
 
-			bignum t1=(u1+quot*v1).trim<BITCOUNT>();
+			bignum t1=(u1+quot*v1). template trim<BITCOUNT>();
 			
 			/* swap down */
 			u1=v1; v1=t1; u3=v3; v3=rem;
@@ -884,7 +884,7 @@ public:
 		
 		bignum inv=u1;
 		if (negative)  // result should be negative--modulo wraparound instead
-			inv=(v-u1).trim<BITCOUNT>();
+			inv=(v-u1). template trim<BITCOUNT>();
 		return inv;
 	}
 	
@@ -910,19 +910,19 @@ public:
 
 			t = a0;
 			a0 = a1;
-			a1 = (t - q*a1).trim<BITCOUNT>();  // FAIL!  WILL GO NEGATIVE!
+			a1 = (t - q*a1). template trim<BITCOUNT>();  // FAIL!  WILL GO NEGATIVE!
 		
 			t = b0;
 			b0 = b1;
-			b1 = (t - q*b1).trim<BITCOUNT>();
+			b1 = (t - q*b1). template trim<BITCOUNT>();
 
 			t = c0;
 			c0 = c1;
-			bignum qc1=(q*c1).trim<BITCOUNT>();
+			bignum qc1=(q*c1). template trim<BITCOUNT>();
 #if OBIGNUM_PARANOIA>=2
 			if (qc1>t) obignum_die("extended_euclidean went negative?!",qc1,t);
 #endif
-			c1 = (t - qc1).trim<BITCOUNT>();
+			c1 = (t - qc1). template trim<BITCOUNT>();
 		}
 
 		*A_mul = a0;
