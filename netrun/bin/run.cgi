@@ -220,29 +220,29 @@ function startupCode() {
 
 //]]></script>
 
-
-<!-- jquery is used for resizing the ace editor area -->
-<script src='ui/jquery-2.2.0.min.js'></script>
-<link rel='stylesheet' href='ui/jquery-ui.min.css'>
-<script src='ui/jquery-ui.min.js'></script>
-
-
 <style type='text/css' media='screen'>
-body {
-	background-color: #141414;
-	color: rgb(200,200,200);
-}
-input{
-	background-color: #202020;
+body,input,textarea, button, select {
 	color: rgb(200,200,200);
 }
 a:link { color: rgb(100,100,255); }
 a:visited { color: rgb(200,0,200); }
+body{ 
+	background-color: #141414;
+}
+input, textarea {
+	background-color: #202020;
+}
+input[type=submit],input[type=text], select {
+	background-color: #301430;
+}
 
 input, textarea, pre {
 	font-family: monospace,sans-serif,courier;
 	font-weight: 900;
 }
+
+p {margin-bottom:0;}
+ul{margin-top:0;}
 
 #ace_editor_resize {
 	position: relative;
@@ -261,6 +261,11 @@ input, textarea, pre {
 	left: 0;
 }
 </style>
+
+<!-- jquery is used for resizing the ace editor area -->
+<script src='ui/jquery-2.2.0.min.js'></script>
+<link rel='stylesheet' href='ui/jquery-ui.min.css'>
+<script src='ui/jquery-ui.min.js'></script>
 
 <script type='text/javascript'>//<![CDATA[
 
@@ -383,10 +388,10 @@ if ($q->param('code')) { &compile_and_run(); }
 
 
 
-print "<ul>\n";
+#print "<ul>\n";
 
 # Make list of saved files
-print "<li>Saved files: <ul>\n";
+print "<p>Saved files:<ul>";
 my $prevpre="notreallyaprefix";
 foreach my $file (<$userdir/saved/*.sav>) {
     if ( $file =~ s/(\w[\w.+-]+).sav$//g ) {
@@ -422,12 +427,12 @@ sub print_hw {
     }
 }
 
-# Make list of homework assignments
+# Make list of classes, and homework assignments in each class
 foreach my $class (reverse <$userdir/class/*>) {
   if ($class =~ m/($userdir\/class\/[\w\/]*)/ ) {
     $class = $1;
   } else { my_security("Class directory $class invalid!");}
-  print "\n<li>".my_cat("$class/info.html")."\n<ul>\n";
+  print "\n<p>".my_cat("$class/info.html")."\n<ul>\n";
   if ($rel_url eq "runt") {
    foreach my $hw (reverse <$class/tHW*>) {
       print_hw($hw);
@@ -448,7 +453,7 @@ foreach my $class (reverse <$userdir/class/*>) {
   if ( -d "$class/Example" ) {print_hw("$class/Example");}
   print "</ul>\n";
 }
-print "</ul>\n";
+#print "</ul>\n";
 
 
 
@@ -498,7 +503,8 @@ sub print_main_form {
 		'<TABLE BORDER=1><TR><TD VALIGN=top COLSPAN=2>',"\n";
 
 	print
-		'<DIV STYLE="width: 46em"><TABLE BORDER=0 WIDTH=100%><TR><TD>Run name:    ',
+		'<DIV STYLE="width: 95vw">',
+		'<TABLE BORDER=0 WIDTH=100%><TR><TD>Run name:    ',
 		$q->textfield(-name=>'name',-default=>"Testing"),
 		"\n</TD><TD align=right>UAF CS NetRun</TD></TR></TABLE> \n";
 
@@ -599,6 +605,7 @@ sub print_main_form {
     old_codebox.style.display = "none";
 
     var editor = ace.edit("ace_editor");
+    editor.setOptions({fontSize:"100%"});
     editor.setTheme("ace/theme/twilight");
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
@@ -647,7 +654,7 @@ sub print_main_form {
 END_ACE
 
 	print $ace_support,
-		"</TD></TR><TR><TD VALIGN=top>\n";
+		"</TD></TR></DIV><TR><TD VALIGN=top>\n";
 	print '<div align=left><input type="submit" onclick="document.getElementsByName(\'code\')[0].value=editor.getSession().getValue();" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
 	
 	print
@@ -658,7 +665,7 @@ END_ACE
 			-onClick=>"updateButton('input')",
 			-attributes=>{-title=>"[alt-shift-i]",-accesskey=>"i"});
 
-	print '<div id="div_input" style="display:none">',
+	print '<div id="div_input" style="display:none;padding-left:1em;">',
 		$q->textarea(-name=>"input",-rows=>4,-columns=>30),
 		'</div>';
 	
@@ -669,7 +676,7 @@ END_ACE
 			-values=>["Options"],
 			-id=>"check_options",
 			-onClick=>"updateButton('options')");
-	print '<div id="div_options" style="display:none;">';
+	print '<div id="div_options" style="display:none;padding-left:1em;">';
 	
 	print
 		"<p>Language:",
@@ -813,7 +820,7 @@ END_ACE
 	}
 
 	print "<hr>";
-	print "Version 2019-03-28";
+	print "Version 2020-08-20 Darkmode";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
