@@ -750,6 +750,7 @@ END_ACE
 		$q->popup_menu(-name=>'mach',
 			-values=>[
 				'skylake64',
+				'threadripper',
 			#	'sandy64',
 			#	'phenom64',
 			#	'x64',
@@ -772,6 +773,7 @@ END_ACE
 			],
 			-labels=>{
 				'skylake64' => 'x86_64 Skylake x4',
+				'threadripper' => 'x86_64 Threadripper x64',
 				'x86' => 'x86_32 Skylake x4',
 			#	'sandy64' => 'x86_64 Sandy Bridge x4',
 			#	'phenom64' => 'x86_64 Phenom II x6',
@@ -1586,6 +1588,28 @@ class gpu_mem_clear_at_startup { public:
 	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores) <br>\n";
 		
 		$sr_host="skylake";
+		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
+		if ( $lang eq "Assembly-NASM") { 
+			$compiler="nasm -f elf64 ";
+			$srcpost='section .text
+netrun_ran_off_end:
+	mov rdi,netrun_ran_off_end_string
+	extern puts
+	call puts
+	mov rax,0
+	ret ; added by netrun
+
+section .data
+netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
+section .text
+			' . $gradepost;
+		}
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++14" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-no-pie -msse4.2 -mavx2 -msse2avx"); }
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
+	} elsif ($mach eq "threadripper") {
+	print "AMD Threadripper 3990X (64 cores)<br>\n";
+		
+		$sr_host="localhost"; # SSH forward
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "Assembly-NASM") { 
 			$compiler="nasm -f elf64 ";
