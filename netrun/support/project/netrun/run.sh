@@ -22,10 +22,10 @@ if [ -s out ]
 then
 	echo "Executing $desc: $@ <br>"
 	
-	color="#202020"
-	[ $res -ne 0 ] && color="#880000"
+	color="default"
+	[ $res -ne 0 ] && color="error"
 
-	echo '<TABLE><TR><TD BGCOLOR="'$color'">
+	echo '<TABLE><TR><TD CLASS="'$color'">
 <! @NetRun/'$desc'@ begin >'
 #  Sadly, -c fails on IRIX:
 #	cat out | head -c 20000 | head -n 200 > out_lil
@@ -43,7 +43,7 @@ then
 	
 	echo '<TABLE><TR><TD VALIGN=top><PRE>'
 	cat $src | netrun/filter_lineno.pl
-	echo '</PRE></TD><TD VALIGN=top BGCOLOR="'$color'">'
+	echo '</PRE></TD><TD VALIGN=top CLASS="'$color'">'
 	cat $src | netrun/filter_htmlpre.pl
 	echo '</TD></TR></TABLE>'
 fi
