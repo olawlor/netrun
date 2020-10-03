@@ -228,7 +228,7 @@ function startupCode() {
 			editor.setTheme('ace/theme/github');
 		} else {
 			document.body.classList.add('dark');
-    editor.setTheme('ace/theme/twilight');
+			editor.setTheme('ace/theme/twilight');
 		}
 	})
 }
@@ -643,11 +643,11 @@ sub print_main_form {
 
     var editor = ace.edit("ace_editor");
     editor.setOptions({fontSize:"100%"});
-		if (window.localStorage.theme === 'dark) {
-    	editor.setTheme("ace/theme/twilight");
-		} else {
-		  editor.setTheme("ace/theme/github");
-		}
+    if (window.localStorage.theme === 'dark) {
+      editor.setTheme("ace/theme/twilight");
+    } else {
+      editor.setTheme("ace/theme/github");
+    }
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
     editor.getSession().setMode("ace/mode/c_cpp");
