@@ -219,10 +219,8 @@ function startupCode() {
 
 	// Theme selection
 	var themeSelect = document.getElementById('theme');
-	var selectedTheme = window.localStorage.theme || 'light';
-	themeSelect.value = selectedTheme;
-	themeSelect.addEventListener('change', () => {
-		window.localStorage.theme = themeSelect.value;
+	themeSelect.value = window.localStorage.theme || 'dark';
+	function updateTheme() { // make the page match themeSelect.value
 		if (themeSelect.value === 'light') {
 			document.body.classList.remove('dark');
 			editor.setTheme('ace/theme/github');
@@ -230,7 +228,13 @@ function startupCode() {
 			document.body.classList.add('dark');
 			editor.setTheme('ace/theme/twilight');
 		}
+	}
+	
+	themeSelect.addEventListener('change', () => {
+		window.localStorage.theme = themeSelect.value;
+		updateTheme(); // change theme
 	})
+	updateTheme(); // set initial theme
 }
 
 //]]></script>
@@ -307,7 +311,7 @@ ul{margin-top:0;}
 <script type='text/javascript'>//<![CDATA[
 
 ",   ######### javascript ends here
-		-onLoad=>"startupCode()");
+		-class=>"dark", -onLoad=>"startupCode()");
 
 # print $q->h1('UAF CS NetRun');
 
@@ -643,10 +647,10 @@ sub print_main_form {
 
     var editor = ace.edit("ace_editor");
     editor.setOptions({fontSize:"100%"});
-    if (window.localStorage.theme === 'dark) {
-      editor.setTheme("ace/theme/twilight");
-    } else {
+    if (window.localStorage.theme == 'light') {
       editor.setTheme("ace/theme/github");
+    } else {
+      editor.setTheme("ace/theme/twilight");
     }
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
