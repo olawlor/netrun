@@ -216,24 +216,61 @@ function startupCode() {
 	updateButton('input');
 	updateButton('options');
 	resizeForm();
+
+	// Theme selection
+	var themeSelect = document.getElementById('theme');
+	var selectedTheme = window.localStorage.theme || 'light';
+	themeSelect.value = selectedTheme;
+	themeSelect.addEventListener('change', () => {
+		window.localStorage.theme = themeSelect.value;
+		if (themeSelect.value === 'light') {
+			document.body.classList.remove('dark');
+			editor.setTheme('ace/theme/github');
+		} else {
+			document.body.classList.add('dark');
+			Theme('ace/theme/twilight');
+		}
+	})
 }
 
 //]]></script>
 
 <style type='text/css' media='screen'>
-body,input,textarea, button, select {
+body.dark, .dark input, .dark textarea, .dark button, .dark select {
 	color: rgb(200,200,200);
 }
-a:link { color: rgb(100,100,255); }
-a:visited { color: rgb(200,0,200); }
-body{ 
+.dark a:link { color: rgb(100,100,255); }
+.dark a:visited { color: rgb(200,0,200); }
+body.dark{ 
 	background-color: #141414;
 }
-input, textarea {
+.dark input, .dark textarea {
 	background-color: #202020;
 }
-input[type=submit],input[type=text], select {
+.dark input[type=submit], .dark input[type=text], .dark select {
 	background-color: #301430;
+}
+
+/* Table styles */
+td.default { /* Default style for output */
+	background-color: #CCCCCC;
+}
+td.error { /* Errors and bad diffs */
+	background-color: #FF8888;
+}
+td.success { /* grade_done */
+	background-color: #88ffff;
+}
+
+/* Dark mode tables */
+.dark td.default { /* Default style for output */
+	background-color: #404040;
+}
+.dark td.error { /* Errors and bad diffs */
+	background-color: #800000;
+}
+.dark td.success { /* grade_done */
+	background-color: #00A080;
 }
 
 input, textarea, pre {
@@ -606,7 +643,11 @@ sub print_main_form {
 
     var editor = ace.edit("ace_editor");
     editor.setOptions({fontSize:"100%"});
-    editor.setTheme("ace/theme/twilight");
+    if (window.localStorage.theme === 'dark) {
+      editor.setTheme("ace/theme/twilight");
+    } else {
+      editor.setTheme("ace/theme/github");
+    }
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
     editor.getSession().setMode("ace/mode/c_cpp");
@@ -2014,7 +2055,7 @@ sub my_sysuser {
 	
 	if ($res != 0) {
 		print $q->hr,$q->h2("$what Error:");
-		my_prefile($outfile,'-bg','#FF8888');
+		my_prefile($outfile,'-bg','error');
 		print "While running command '$cmd' with input file '$src':";
 		my_prefile($src,'-line');
 		exit(0);
@@ -2035,7 +2076,7 @@ sub my_prefile {
 	my $src=shift;
 	my $linePrint=0;
 	my $lineNo=0;
-	my $bgColor="#404040";
+	my $bgColor="default";
 	while (@_) {
 		my $arg=shift;
 		if ($arg eq "-line") {$linePrint=1;}
@@ -2057,7 +2098,7 @@ sub my_prefile {
 		print"</PRE></TD><TD>";
 	}
 	
-	print '<TD BGCOLOR="'.$bgColor.'"><PRE>';
+	print '<TD CLASS="'.$bgColor.'"><PRE>';
 	my $line;
 	open(F,"<$src") or err("Could not open file '$src'");
 	foreach $line (<F>) {
