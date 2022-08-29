@@ -482,7 +482,13 @@ foreach my $class (reverse <$userdir/class/*>) {
       print_hw($hw);
     }
   }
-  foreach my $hw (reverse <$class/HW*>) {
+  foreach my $hw (reverse <$class/HW1[0-9]*>) {
+    print_hw($hw);
+  }
+  foreach my $hw (reverse <$class/HW[2-9]*>) {
+    print_hw($hw);
+  }
+  foreach my $hw (reverse <$class/HW[01]>) {
     print_hw($hw);
   }
   foreach my $hw (reverse <$class/[MFL]*>) {
@@ -794,8 +800,8 @@ END_ACE
 		"<p>Machine:",
 		$q->popup_menu(-name=>'mach',
 			-values=>[
-				'skylake64',
 				'threadripper',
+				'skylake64',
 			#	'sandy64',
 			#	'phenom64',
 			#	'x64',
@@ -809,7 +815,7 @@ END_ACE
 			#	'486',
 			#	'Alpha',
 				'ARM',
-			#	'ARMpi2',
+				'ARMpi4',
 			#	'SPARC',
 			#	'MIPS',
 			#	'PPC',
@@ -817,8 +823,8 @@ END_ACE
 			#	'PIC'
 			],
 			-labels=>{
-				'skylake64' => 'x86_64 Skylake x4',
 				'threadripper' => 'x86_64 Threadripper x64',
+				'skylake64' => 'x86_64 Skylake x4',
 				'x86' => 'x86_32 Skylake x4',
 			#	'sandy64' => 'x86_64 Sandy Bridge x4',
 			#	'phenom64' => 'x86_64 Phenom II x6',
@@ -833,14 +839,14 @@ END_ACE
 			#	'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
 				'ARM' => 'ARM (Raspberry Pi 3)',
-			#	'ARM' => 'ARM (ARMv6 Linux)',
+				'ARMpi4' => 'ARM64 (Pi 4)',
 			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 			#	'MIPS' => 'MIPS (SGI IRIX)',
 			#	'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
 			#	'PIC' => 'PIC Microcontroller'
 			},
-			-default=>['skylake64']),"\n";
+			-default=>['threadripper']),"\n";
 
 	print
 		"<p>Compile options:",
@@ -1031,7 +1037,7 @@ sub create_project_directory {
 	if (!$lang) { $lang="Assembly"; }
 	my $mach=$q->param('mach');
 	if (!$mach) { $mach="x86"; }
-	if ( $mach eq "x64" ) { $mach="skylake64"; }
+	if ( $mach eq "x64" ) { $mach="threadripper"; }
 	
 	my @ocompile=$q->param('ocompile');
 	my @orun=$q->param('orun');
@@ -1654,7 +1660,7 @@ section .text
 	} elsif ($mach eq "threadripper") {
 	print "AMD Threadripper 3990X (64 cores)<br>\n";
 		
-		$sr_host="localhost"; # SSH forward
+		$sr_host="aurora"; # SSH forward
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
 		if ( $lang eq "Assembly-NASM") { 
 			$compiler="nasm -f elf64 ";
@@ -1728,35 +1734,6 @@ section .text
 #include <stdio.h>
 #include "lib/inc.h"
 #';
-	} elsif ( $mach eq "Alpha") {
-	print "FYI-- This is a 233Mhz DEC Alpha CPU with 32MB RAM<br>\n";
-		$sr_host="dec1";
-	} elsif ( $mach eq "SPARC") {
-	print "FYI-- This is a 350MHz UltraSparc IIi CPU.<br>\n";
-		$sr_host="ultra52";
-	} elsif ( $mach eq "ARMold") {
-	print "FYI-- This is a 500MHz Samsung S3C6410 ARMv6 CPU.<br>\n";
-		$sr_host="viz1";
-		$sr_port=2984;
-		$saferun="netrun/safe_arm.sh";
-		
-		$disassembler="objdump -drC";   # -M freaks out this version
-		if ( $lang eq "Assembly") { ################# GNU Assembly
-			$srcpre='
-.syntax unified  @ no #constants
-.align 2
-.code 32
-.section .text
-'. $gradecode .'
-.global foo
-';
-			if ($mode eq 'frag') { # Subroutine fragment
-				$srcpre .="\nfoo:\n";
-				$srcpost='bx lr'; 		
-			}
-		}
-
-		
 	} elsif ( $mach eq "ARM" || $mach eq "ARMpi2" ) {
 	print "FYI-- This is an 1.2GHz Raspberry Pi 3 (ARMv71)<br>\n";
 		$sr_host="lawpi3";
@@ -1783,7 +1760,25 @@ section .text
 				$srcpost='bx lr'; 		
 			}
 		}
-		
+	} elsif ( $mach eq "ARMpi4" ) {
+	print "FYI-- This is an 1.5GHz Raspberry Pi 4 (ARMv8 in 64-bit mode)<br>\n";
+		$sr_host="137.229.25.24";
+		$sr_port=2983;
+		if ( $lang eq "Assembly") {
+			$compiler="as "; 
+		}
+		$disassembler="objdump -drC";   # -M freaks out this version
+		if ( $lang eq "Assembly") { ################# GNU Assembly
+			$srcpre='
+.text
+'. $gradecode .'
+.global foo
+';
+			if ($mode eq 'frag') { # Subroutine fragment
+				$srcpre .="\nfoo:\n";
+				$srcpost='ret'; 		
+			}
+		}
 	} elsif ( $mach eq "win32") {
 	print "WARNING-- Win32 machine is emulated with QEMU, and may be slow (half a minute!)<br>\n";
 		@cflags=("/EHsc","/DWIN32=1");
