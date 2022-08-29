@@ -132,7 +132,7 @@ print
 	
 print p,"The password email should arrive in under one minute.  If your
 email doesn't arrive, check your spam filter and forwarding settings,
-try a test email to yourself, or <a href=\"mailto:lawlor\@alaska.edu\">email
+try a test email to yourself, or <a href=\"mailto:oslawlor\@alaska.edu\">email
 Dr. Lawlor</a>";
 
 print p,"WARNING: Non-UA email accounts are not allowed.
