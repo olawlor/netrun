@@ -236,7 +236,6 @@ function startupCode() {
 	})
 	updateTheme(); // set initial theme
 
-
 	// Editor syntax highlighting
 	var langSelect = document.getElementsByName('lang')[0] // There will only ever be one input with this name
 	var langMap = { // Map the selected language to an ace editor mode
