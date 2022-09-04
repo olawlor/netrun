@@ -235,6 +235,46 @@ function startupCode() {
 		updateTheme(); // change theme
 	})
 	updateTheme(); // set initial theme
+
+
+	// Editor syntax highlighting
+	var langSelect = document.getElementsByName('lang')[0] // There will only ever be one input with this name
+	var langMap = { // Map the selected language to an ace editor mode
+		'C++': 'ace/mode/c_cpp',
+		'C++0x': 'ace/mode/c_cpp',
+		'C++14': 'ace/mode/c_cpp',
+		'C++17': 'ace/mode/c_cpp',
+		'C': 'ace/mode/c_cpp',
+		'Assembly-NASM': 'ace/mode/assembly_x86',
+		'Assembly': 'ace/mode/assembly_x86',
+		'Fortran 77': 'ace/mode/plain_text',
+		'OpenMP': 'ace/mode/c_cpp',
+		'MPI': 'ace/mode/c_cpp',
+		'CUDA': 'ace/mode/c_cpp',
+		'GPGPU': 'ace/mode/c_cpp',
+		'CBMC': 'ace/mode/c_cpp',
+		'Python': 'ace/mode/python',
+		'Python3': 'ace/mode/python',
+		'Perl': 'ace/mode/perl',
+		'Postscript': 'ace/mode/plain_text',
+		'PHP': 'ace/mode/php',
+		'Scheme': 'ace/mode/scheme',
+		'JavaScript': 'ace/mode/javascript',
+		'Ruby': 'ace/mode/ruby',
+		'Bash': 'ace/mode/sh',
+		'Prolog': 'ace/mode/prolog',
+		'vhdl': 'ace/mode/vhdl'
+	}
+
+	function updateLanguage() { // Update the ace editor mode to match the selected language
+		var lang = langSelect.value;
+		editor.getSession().setMode(langMap[lang]);
+	}
+
+	langSelect.addEventListener('change', () => {
+		updateLanguage();
+	})
+	updateLanguage();
 }
 
 //]]></script>
@@ -660,7 +700,6 @@ sub print_main_form {
     }
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
-    editor.getSession().setMode("ace/mode/c_cpp");
     editor.getSession().setUseWrapMode(false);
     editor.getSession().setUseWorker(false);
     editor.getSession().setUseSoftTabs(false);
