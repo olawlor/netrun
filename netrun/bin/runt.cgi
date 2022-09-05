@@ -235,6 +235,34 @@ function startupCode() {
 		updateTheme(); // change theme
 	})
 	updateTheme(); // set initial theme
+
+	// Editor syntax highlighting (by Katlyn Lorimer, 2022-09)
+	var langSelect = document.getElementsByName('lang')[0];
+	var langMap = { // Map netrun name to ace editor mode
+		'Assembly-NASM': 'assembly_x86',
+		'Assembly': 'assembly_x86',
+		'Fortran 77': 'plain_text',
+		'Python': 'python',
+		'Python3': 'python',
+		'Perl': 'perl',
+		'Postscript': 'plain_text',
+		'PHP': 'php',
+		'Scheme': 'scheme',
+		'JavaScript': 'javascript',
+		'Ruby': 'ruby',
+		'Bash': 'sh',
+		'Prolog': 'prolog',
+		'vhdl': 'vhdl'
+	}
+	function updateLanguage() { // Update the ace editor mode to match the selected language
+		var lang = langSelect.value;
+		var aceName = langMap[lang] || 'c_cpp';
+		editor.getSession().setMode('ace/mode/'+aceName);
+	}
+	langSelect.addEventListener('change', () => {
+		updateLanguage();
+	})
+	updateLanguage();
 }
 
 //]]></script>
@@ -660,7 +688,7 @@ sub print_main_form {
     }
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
-    editor.getSession().setMode("ace/mode/c_cpp");
+    //editor.getSession().setMode("ace/mode/c_cpp");
     editor.getSession().setUseWrapMode(false);
     editor.getSession().setUseWorker(false);
     editor.getSession().setUseSoftTabs(false);
