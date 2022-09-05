@@ -901,7 +901,7 @@ END_ACE
 	}
 
 	print "<hr>";
-	print "Version 2020-08-20 Darkmode";
+	print "Version 2022-09-04 Highlight";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
