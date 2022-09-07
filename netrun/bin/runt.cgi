@@ -19,6 +19,8 @@ $q->param(); # Check for CGI errors early...
 my $error = $q->cgi_error;
 if ($error) { err("Error '$error' in CGI headers!"); }
 
+$CGI::LIST_CONTEXT_WARN=0; # Avoid log clutter
+
 # The user is taking this (single-line) action--record it.
 sub journal {
 	my $action="$ENV{'REMOTE_USER'} ".shift;
@@ -895,7 +897,8 @@ END_ACE
 		print '<p><a href="?hw='.$q->param('hwnum').'&reset=1">Clean reset</a> this homework problem (discards your work)';
 	}
 
-	if ($q->param('lang') eq "MPI") {
+    my $lang=$q->param('lang');
+	if (defined($lang) && $lang eq "MPI") {
 		print '<p>MPI Processes (1-20): ',
 			$q->textfield(-name=>"numprocs");
 	}
