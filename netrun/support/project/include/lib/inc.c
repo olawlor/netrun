@@ -12,23 +12,30 @@
 /* To avoid cluttering up the screen during timing tests... */
 int timer_only_dont_print=0;
 
+/* On x86-64, the stack needs to be 16-byte aligned
+   for any functions that touch standard I/O.
+   If it isn't, this function warns you about the problem. */
+CDECL void align_stack_warning()
+{
+#if defined(__GNUC__) && defined(__x86_64__)
+    long rsp=0;
+    __asm__ ("mov %%rsp,%0":"=r"(rsp));
+    long misaligned=rsp&0xF;
+    if (misaligned==8) puts("CRASH WARNING: Stack pointer ends in 8.  For 16-byte stack alignment you need to push one more (or one less) thing before calling this function.");
+    else if (misaligned) puts("CRASH WARNING: Stack pointer doesn't end in 0 or 8, this is a weird stack misalignment.");
+    else /* misaligned==0, fine */ return;
+#endif
+}
 
 /* Read one input integer from the user. */
 long read_input(void) {
 	long ret=0;
 
 	if (timer_only_dont_print) return 0;
-/*	if (1!=scanf("%li",&ret))  //<- crashes if the stack is misaligned */
-	char buf[1024];
-	if (0!=fgets(buf,sizeof(buf),stdin))
-	{
-		if (buf[0]=='0' && buf[1]=='x') {
-			ret=strtol(buf,NULL,16); /* hex input */
-		} else {
-			ret=strtol(buf,NULL,10); /* decimal input */
-		}
-	}
-	else
+	
+	align_stack_warning();
+	
+	if (1!=scanf("%li",&ret)) 
 	{
 		if (feof(stdin)) {
 			exit(0);
@@ -40,10 +47,9 @@ long read_input(void) {
 	printf("Please enter an input value:\n");
 	fflush(stdout);
 	if (ret<0) /* 32-bit output, for backward compatibility */
-		snprintf(buf,sizeof(buf),"read_input> Returning %ld (0x%X)",ret,(int)ret);
+		printf("read_input> Returning %ld (0x%X)\n",ret,(int)ret);
 	else
-		snprintf(buf,sizeof(buf),"read_input> Returning %ld (0x%lX)",ret,ret);
-	puts(buf);
+		printf("read_input> Returning %ld (0x%lX)\n",ret,ret);
 	fflush(stdout);
 	return ret;
 }
@@ -54,6 +60,9 @@ float read_float(void) {
 	float ret=0;
 
 	if (timer_only_dont_print) return 0;
+	
+	align_stack_warning();
+	
 	printf("Please enter a float input value:\n");
 	fflush(stdout);
 	if (1!=scanf("%f",&ret)) {
@@ -69,6 +78,7 @@ float read_float(void) {
 
 /* Read one input string from the user. Returns 0 if no more input ready. */
 int read_string(char *dest_str) {
+	align_stack_warning();
 	if (0==fgets(dest_str,100,stdin)) {
 		return 0;
 	}
@@ -79,20 +89,22 @@ int read_string(char *dest_str) {
 /* Print this integer parameter (on the stack) */
 void print_int(int i) {
 	if (timer_only_dont_print) return;
+	align_stack_warning();
+	
 	printf("Printing integer %d (0x%X)\n",i,i);
 }
+
+
 void print_long(long i) {
 	if (timer_only_dont_print) return;
-#if 0 /* 2019-09-09: workaround for bug where printf requires an aligned stack */
+    align_stack_warning();
+    
 	printf("Printing integer %ld (0x%lX)\n",i,i);
-#else
-	char buf[1024];
-	snprintf(buf,sizeof(buf),"Printing integer %ld (0x%lX)", i,i);
-	puts(buf);
-#endif
 }
 void print_float(float f) {
 	if (timer_only_dont_print) return;
+	align_stack_warning();
+	
 	printf("Printing float %f (%g)\n",f,f);
 }
 CDECL void print_int_(int *i) {print_int(*i);} /* fortran, gfortran compiler */

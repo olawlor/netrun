@@ -12,8 +12,25 @@
 #ifdef __cplusplus /* C++ uses special name mangling (not in C or Assembly) */
 #  define CDECL extern "C"
 #include <stdexcept>
+#include <vector>
 
 /* C++ only routines */
+/* 2022 CS 601 HW2 */
+template <class container>
+inline container barray_fill(long len,float fraction_1bit)
+{
+	container ret(len);
+	int seed=0xbadf00d;
+	for (long i=0;i<len;i++) {
+                seed=seed*69069+1; // VMS / old glibc LCG
+		if (int(seed&0xfff)<int(0xfff*fraction_1bit))
+			ret[i]=1;
+		else 
+			ret[i]=0;
+        }
+	return ret;
+}
+
 /* 2007 CS321 HW6.2 */
 inline int netrun_access_cool_address(void) { 
 	int *p=(int *)0x1986000; (*p)++; return (int)(long)p; 
