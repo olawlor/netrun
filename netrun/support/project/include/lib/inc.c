@@ -213,6 +213,7 @@ int iarray_print(int *arr,int n)
 		exit(1);
 	}
 	if (timer_only_dont_print) return n;
+	align_stack_warning();
 	p=n;
 	if (p>10) p=10; /* Only print first 10 elements */
 	printf("iarray_print: %d elements\n",n);
@@ -242,6 +243,7 @@ long larray_print(long *arr,long n)
 {
 	long i=0,p;
 	if (timer_only_dont_print) return n;
+	align_stack_warning();
 	p=n;
 	if (p>10) p=10; /* Only print first 10 elements */
 	larray_length_print(n);
@@ -270,6 +272,7 @@ int farray_print(float *arr,int n)
 		exit(1);
 	}
 	if (timer_only_dont_print) return n;
+	align_stack_warning();
 	p=n;
 	if (p>10) p=10; /* Only print first 10 elements */
 	printf("farray_print: %d elements\n",n);
