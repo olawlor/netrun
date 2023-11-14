@@ -12,7 +12,7 @@ openlog 'netrun_run', '', 'local1';        # don't forget this
 
 #use CGI qw/:standard -nosticky/;
 #use CGI qw/:standard/;
-use CGI;
+use CGI qw(-utf8);
 
 our $q = new CGI;
 $q->param(); # Check for CGI errors early...
@@ -1795,6 +1795,7 @@ section .text
 	print "FYI-- This is an 1.5GHz Raspberry Pi 4 (ARMv8 in 64-bit mode)<br>\n";
 		$sr_host="137.229.25.24";
 		$sr_port=2983;
+		push(@cflags,"-fPIC");
 		if ( $lang eq "Assembly") {
 			$compiler="as "; 
 		}
