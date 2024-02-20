@@ -12,12 +12,14 @@ openlog 'netrun_run', '', 'local1';        # don't forget this
 
 #use CGI qw/:standard -nosticky/;
 #use CGI qw/:standard/;
-use CGI;
+use CGI qw(-utf8);
 
 our $q = new CGI;
 $q->param(); # Check for CGI errors early...
 my $error = $q->cgi_error;
 if ($error) { err("Error '$error' in CGI headers!"); }
+
+$CGI::LIST_CONTEXT_WARN=0; # Avoid log clutter
 
 # The user is taking this (single-line) action--record it.
 sub journal {
@@ -115,7 +117,7 @@ if ($grades) {
 		my_security("Grades name '$grades' contains invalid characters");
 	}
 	journal("dump_grades $grades");
-	print $q->header(-type  =>  'text/html');
+	print $q->header(-type  =>  'text/html', -charset => "UTF-8");
 	if (-r "grades/$grades" ) {
 		system("cat","grades/$grades");
 		exit(0);
@@ -126,7 +128,8 @@ if ($grades) {
 }
 
 ############# Output HTML
-print $q->header;
+# print $q->header(-type  =>  'text/html', -charset => "UTF-8");
+print $q->header;  # force ISO codepage
 
 print $q->start_html(-title=>'NetRun',
 		-script=>"
@@ -215,33 +218,102 @@ function startupCode() {
 	updateButton('input');
 	updateButton('options');
 	resizeForm();
+
+	// Theme selection
+	var themeSelect = document.getElementById('theme');
+	themeSelect.value = window.localStorage.theme || 'dark';
+	function updateTheme() { // make the page match themeSelect.value
+		if (themeSelect.value === 'light') {
+			document.body.classList.remove('dark');
+			editor.setTheme('ace/theme/github');
+		} else {
+			document.body.classList.add('dark');
+			editor.setTheme('ace/theme/twilight');
+		}
+	}
+	
+	themeSelect.addEventListener('change', () => {
+		window.localStorage.theme = themeSelect.value;
+		updateTheme(); // change theme
+	})
+	updateTheme(); // set initial theme
+
+	// Editor syntax highlighting (by Katlyn Lorimer, 2022-09)
+	var langSelect = document.getElementsByName('lang')[0];
+	var langMap = { // Map netrun name to ace editor mode
+		'Assembly-NASM': 'assembly_x86',
+		'Assembly': 'assembly_x86',
+		'Fortran 77': 'plain_text',
+		'Python': 'python',
+		'Python3': 'python',
+		'Perl': 'perl',
+		'Postscript': 'plain_text',
+		'PHP': 'php',
+		'Scheme': 'scheme',
+		'JavaScript': 'javascript',
+		'Ruby': 'ruby',
+		'Bash': 'sh',
+		'Prolog': 'prolog',
+		'vhdl': 'vhdl'
+	}
+	function updateLanguage() { // Update the ace editor mode to match the selected language
+		var lang = langSelect.value;
+		var aceName = langMap[lang] || 'c_cpp';
+		editor.getSession().setMode('ace/mode/'+aceName);
+	}
+	langSelect.addEventListener('change', () => {
+		updateLanguage();
+	})
+	updateLanguage();
 }
 
 //]]></script>
 
-
-<!-- jquery is used for resizing the ace editor area -->
-<script src='ui/jquery-2.2.0.min.js'></script>
-<link rel='stylesheet' href='ui/jquery-ui.min.css'>
-<script src='ui/jquery-ui.min.js'></script>
-
-
-<!-- Global Site Tag (gtag.js) - Google Analytics -->
-<script async src='https://www.googletagmanager.com/gtag/js?id=UA-106859486-1'></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments)};
-  gtag('js', new Date());
-
-  gtag('config', 'UA-106859486-1');
-</script>
-
-
 <style type='text/css' media='screen'>
+body.dark, .dark input, .dark textarea, .dark button, .dark select {
+	color: rgb(200,200,200);
+}
+.dark a:link { color: rgb(100,100,255); }
+.dark a:visited { color: rgb(200,0,200); }
+body.dark{ 
+	background-color: #141414;
+}
+.dark input, .dark textarea {
+	background-color: #202020;
+}
+.dark input[type=submit], .dark input[type=text], .dark select {
+	background-color: #301430;
+}
+
+/* Table styles */
+td.default { /* Default style for output */
+	background-color: #CCCCCC;
+}
+td.error { /* Errors and bad diffs */
+	background-color: #FF8888;
+}
+td.success { /* grade_done */
+	background-color: #88ffff;
+}
+
+/* Dark mode tables */
+.dark td.default { /* Default style for output */
+	background-color: #404040;
+}
+.dark td.error { /* Errors and bad diffs */
+	background-color: #800000;
+}
+.dark td.success { /* grade_done */
+	background-color: #00A080;
+}
+
 input, textarea, pre {
 	font-family: monospace,sans-serif,courier;
 	font-weight: 900;
 }
+
+p {margin-bottom:0;}
+ul{margin-top:0;}
 
 #ace_editor_resize {
 	position: relative;
@@ -261,10 +333,15 @@ input, textarea, pre {
 }
 </style>
 
+<!-- jquery is used for resizing the ace editor area -->
+<script src='ui/jquery-2.2.0.min.js'></script>
+<link rel='stylesheet' href='ui/jquery-ui.min.css'>
+<script src='ui/jquery-ui.min.js'></script>
+
 <script type='text/javascript'>//<![CDATA[
 
 ",   ######### javascript ends here
-		-onLoad=>"startupCode()");
+		-class=>"dark", -onLoad=>"startupCode()");
 
 # print $q->h1('UAF CS NetRun');
 
@@ -382,10 +459,10 @@ if ($q->param('code')) { &compile_and_run(); }
 
 
 
-print "<ul>\n";
+#print "<ul>\n";
 
 # Make list of saved files
-print "<li>Saved files: <ul>\n";
+print "<p>Saved files:<ul>";
 my $prevpre="notreallyaprefix";
 foreach my $file (<$userdir/saved/*.sav>) {
     if ( $file =~ s/(\w[\w.+-]+).sav$//g ) {
@@ -421,12 +498,12 @@ sub print_hw {
     }
 }
 
-# Make list of homework assignments
+# Make list of classes, and homework assignments in each class
 foreach my $class (reverse <$userdir/class/*>) {
   if ($class =~ m/($userdir\/class\/[\w\/]*)/ ) {
     $class = $1;
   } else { my_security("Class directory $class invalid!");}
-  print "\n<li>".my_cat("$class/info.html")."\n<ul>\n";
+  print "\n<p>".my_cat("$class/info.html")."\n<ul>\n";
   if ($rel_url eq "runt") {
    foreach my $hw (reverse <$class/tHW*>) {
       print_hw($hw);
@@ -435,7 +512,13 @@ foreach my $class (reverse <$userdir/class/*>) {
       print_hw($hw);
     }
   }
-  foreach my $hw (reverse <$class/HW*>) {
+  foreach my $hw (reverse <$class/HW1[0-9]*>) {
+    print_hw($hw);
+  }
+  foreach my $hw (reverse <$class/HW[2-9]*>) {
+    print_hw($hw);
+  }
+  foreach my $hw (reverse <$class/HW[01]>) {
     print_hw($hw);
   }
   foreach my $hw (reverse <$class/[MFL]*>) {
@@ -447,7 +530,7 @@ foreach my $class (reverse <$userdir/class/*>) {
   if ( -d "$class/Example" ) {print_hw("$class/Example");}
   print "</ul>\n";
 }
-print "</ul>\n";
+#print "</ul>\n";
 
 
 
@@ -497,7 +580,8 @@ sub print_main_form {
 		'<TABLE BORDER=1><TR><TD VALIGN=top COLSPAN=2>',"\n";
 
 	print
-		'<DIV STYLE="width: 46em"><TABLE BORDER=0 WIDTH=100%><TR><TD>Run name:    ',
+		'<DIV STYLE="width: 95vw">',
+		'<TABLE BORDER=0 WIDTH=100%><TR><TD>Run name:    ',
 		$q->textfield(-name=>'name',-default=>"Testing"),
 		"\n</TD><TD align=right>UAF CS NetRun</TD></TR></TABLE> \n";
 
@@ -598,10 +682,15 @@ sub print_main_form {
     old_codebox.style.display = "none";
 
     var editor = ace.edit("ace_editor");
-    editor.setTheme("ace/theme/github");
+    editor.setOptions({fontSize:"100%"});
+    if (window.localStorage.theme == 'light') {
+      editor.setTheme("ace/theme/github");
+    } else {
+      editor.setTheme("ace/theme/twilight");
+    }
     editor.setShowPrintMargin(false);
     editor.setShowInvisibles(false);
-    editor.getSession().setMode("ace/mode/c_cpp");
+    //editor.getSession().setMode("ace/mode/c_cpp");
     editor.getSession().setUseWrapMode(false);
     editor.getSession().setUseWorker(false);
     editor.getSession().setUseSoftTabs(false);
@@ -646,7 +735,7 @@ sub print_main_form {
 END_ACE
 
 	print $ace_support,
-		"</TD></TR><TR><TD VALIGN=top>\n";
+		"</TD></TR></DIV><TR><TD VALIGN=top>\n";
 	print '<div align=left><input type="submit" onclick="document.getElementsByName(\'code\')[0].value=editor.getSession().getValue();" name="Run It!" value="Run It!" title="[alt-shift-r]" accesskey="r"  /></div>';
 	
 	print
@@ -657,7 +746,7 @@ END_ACE
 			-onClick=>"updateButton('input')",
 			-attributes=>{-title=>"[alt-shift-i]",-accesskey=>"i"});
 
-	print '<div id="div_input" style="display:none">',
+	print '<div id="div_input" style="display:none;padding-left:1em;">',
 		$q->textarea(-name=>"input",-rows=>4,-columns=>30),
 		'</div>';
 	
@@ -668,7 +757,7 @@ END_ACE
 			-values=>["Options"],
 			-id=>"check_options",
 			-onClick=>"updateButton('options')");
-	print '<div id="div_options" style="display:none;">';
+	print '<div id="div_options" style="display:none;padding-left:1em;">';
 	
 	print
 		"<p>Language:",
@@ -677,6 +766,7 @@ END_ACE
 			'C++',
 			'C++0x',
 			'C++14',
+			'C++17',
 			'C',
 			'Assembly-NASM',
 			'Assembly',
@@ -685,27 +775,28 @@ END_ACE
 			'MPI',
 			'CUDA',
 			'GPGPU',
-			'OpenCL',
+#			'OpenCL',
 			'CBMC',
 			'Python',
 			'Python3',
 			'Perl',
+			'Postscript',
 			'PHP',
+			'Scheme',
 			'JavaScript',
 			'Ruby',
 			'Bash',
 			'Prolog',
-			'glfp',
-			'glsl',
-			'funk_emu',
-			'spice',
+#			'glfp',
+#			'glsl',
+#			'funk_emu',
+#			'spice',
 			'vhdl'],
 			-labels=>{'Assembly' => 'Assembly-GNU',
 				'glfp' => 'OpenGL Fragment Program',
 				'glsl' => 'OpenGL Shader Language (GLSL)',
 				'spice' => 'SPICE Analog Circuit',
 				'C++0x' => 'C++11',
-				'C++14' => 'C++14',
 				'vhdl' => 'VHDL Digital Circuit'},
 			-default=>['C++0x']),"\n";
 
@@ -722,41 +813,49 @@ END_ACE
 
 	print   "<p>Function: ",
 		$q->popup_menu(-name=>'foo_ret',
-			-values=>['void','long','int','double','float','std::string'],
+			-values=>['void','long','int','double','float','std::string','sse_float4','sse_double2'],
 			-default=>['long']),
 		" foo(",
 		$q->popup_menu(-name=>'foo_arg0',
 			-values=>['void','long','int','double','float','std::string'],
 			-default=>['void']),
 		")\n";
+	print
+		"<p>&nbsp;&nbsp;",
+		$q->checkbox_group(-name=>'repeat',
+			-values=>['Re-run foo until input ends'],
+			-defaults=>[]),"\n";
 
 	print
 		"<p>Machine:",
 		$q->popup_menu(-name=>'mach',
 			-values=>[
+				'threadripper',
 				'skylake64',
-				'sandy64',
-				'phenom64',
-				'x64',
+			#	'sandy64',
+			#	'phenom64',
+			#	'x64',
 				'x86',
 			#	'x86_2core',
 			#	'x86_atom',
 			#	'x86_4core',
 			#	'ia64',
 			#	'win32',
-				'x86_2',
-				'486',
+			#	'x86_2',
+			#	'486',
 			#	'Alpha',
 				'ARM',
-				'ARMpi2',
-				'SPARC',
-				'MIPS',
+				'ARMpi4',
+			#	'SPARC',
+			#	'MIPS',
 			#	'PPC',
 			#	'PPC_EMU',
 			#	'PIC'
 			],
 			-labels=>{
+				'threadripper' => 'x86_64 Threadripper x64',
 				'skylake64' => 'x86_64 Skylake x4',
+				'x86' => 'x86_32 Skylake x4',
 			#	'sandy64' => 'x86_64 Sandy Bridge x4',
 			#	'phenom64' => 'x86_64 Phenom II x6',
 			#	'x64' => 'x86_64 Q6600 x4',
@@ -769,15 +868,15 @@ END_ACE
 			#	'x86_2' => 'x86 dual P3 (Linux)',
 			#	'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
-				'ARMpi2' => 'ARM (Raspberry Pi 2)',
-			#	'ARM' => 'ARM (ARMv6 Linux)',
+				'ARM' => 'ARM (Raspberry Pi 3)',
+				'ARMpi4' => 'ARM64 (Pi 4)',
 			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 			#	'MIPS' => 'MIPS (SGI IRIX)',
 			#	'PPC' => 'PowerPC (OS X)',
 			#	'PPC_EMU' => 'PowerPC (Linux) EMULATED',
 			#	'PIC' => 'PIC Microcontroller'
 			},
-			-default=>['skylake64']),"\n";
+			-default=>['threadripper']),"\n";
 
 	print
 		"<p>Compile options:",
@@ -798,23 +897,14 @@ END_ACE
 		print '<p><a href="?hw='.$q->param('hwnum').'&reset=1">Clean reset</a> this homework problem (discards your work)';
 	}
 
-	if ($q->param('lang') eq "MPI") {
+    my $lang=$q->param('lang');
+	if (defined($lang) && $lang eq "MPI") {
 		print '<p>MPI Processes (1-20): ',
 			$q->textfield(-name=>"numprocs");
 	}
 
 	print "<hr>";
-	if (0) {
-		print "Announcements:
-	<UL>
-		<li>ACE editor support (2016-02-05, thanks to Noah Betzen)
-		<li>Disqus comments for homeworks after OK! (2014-08-22)
-		<li>foo can take or return long, string, etc.  (2014-08-20)
-		<li>Keyboard shortcut: Alt-R runs it! (2012-09-28, thanks to Ben White)
-	</UL>
-	";
-	}
-	print "Version 2018-08-24";
+	print "Version 2022-09-04 Highlight";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -978,7 +1068,7 @@ sub create_project_directory {
 	if (!$lang) { $lang="Assembly"; }
 	my $mach=$q->param('mach');
 	if (!$mach) { $mach="x86"; }
-	if ( $mach eq "x64" ) { $mach="skylake64"; }
+	if ( $mach eq "x64" ) { $mach="threadripper"; }
 	
 	my @ocompile=$q->param('ocompile');
 	my @orun=$q->param('orun');
@@ -1050,8 +1140,12 @@ sub create_project_directory {
 		}
 		else {
 			push(@lflags,"-DTIME_FOO=1");
-			$main="lib/main.cpp"; # Must recompile main.cpp with timing enabled
+			$main="include/lib/main.cpp";
 		}
+	}
+	if (grep(/^Re/,$q->param('repeat'))==1) {
+		push(@lflags,"-DREPEAT_FOO=1");
+		$main="include/lib/main.cpp";
 	}
 	if (grep(/^Profile$/, @orun)==1) {
 		push(@cflags,"-pg");
@@ -1062,14 +1156,18 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
+	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
+		if ($lang ne "CUDA" ) {
+			push(@cflags,"-fopenmp"); # accept pragma omp by default
+		}
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
 	        }
-		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp -msse3 $(CFLAGS)';}
-		if ($lang eq "C++0x") {$compiler=$linker='g++ -fopenmp -std=c++0x $(CFLAGS)';}
-		if ($lang eq "C++14") {$compiler=$linker='g++ -fopenmp -std=c++14 $(CFLAGS)';}
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -msse3 $(CFLAGS)';}
+		if ($lang eq "C++0x") {$compiler=$linker='g++  -std=c++0x $(CFLAGS)';}
+		if ($lang eq "C++14") {$compiler=$linker='g++  -std=c++14 $(CFLAGS)';}
+		if ($lang eq "C++17") {$compiler=$linker='g++  -std=c++17 $(CFLAGS)';}
 		$srcext="cpp";
 		$srcpre='/* NetRun C++ Wrapper (Public Domain) */
 #include <cstdio>
@@ -1086,7 +1184,8 @@ sub create_project_directory {
 #include <map>
 #include <string>
 #include "lib/inc.h"
-using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code */
+using std::cout;
+using std::cin;
 
 ' . $gradecode;
 		if ($mode eq 'main') { # whole program, with headers
@@ -1101,6 +1200,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 	}
 	elsif ( $lang eq "C") { ############# C
 		$compiler='gcc -fomit-frame-pointer $(CFLAGS)'; 
+                push(@cflags,"-no-pie"); # avoids overflow in R_X86_64_PC32
 		$srcext="c";
 		$srcpre='/* NetRun C Wrapper (Public Domain) */
 #include <stdio.h>
@@ -1113,7 +1213,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 ' . $gradecode;
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre=$srcpre . $proto ." {\n";
-			$srcpost="\n;\n  return 0;\n}\n" . $gradepost;
+			$srcpost .= "\n}\n" . $gradepost;
 		}
 	}
 	elsif ( $lang eq "Fortran 77") { ############### Fortran 77
@@ -1130,7 +1230,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 		}
 		# FIXME: fortran name mangling is platform-dependent!
 		push(@lflags,"-Dfoo=foo_");
-		$main="lib/main.cpp"; # Must recompile main.cpp with new foo name
+		$main="include/lib/main.cpp";  # Recompile with fortran foo name
 	}
 	elsif ( $lang eq "Haskell") { # Fails with mkTextEncoding: invalid argument
 		$compiler="ghc";
@@ -1138,7 +1238,7 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 		$srcext="hs";
 		$srcpre="";
 		$srcpost="";
-		$main=""; # Disable C-style main
+		$main="";  # no C++ main
 	}
 	elsif ( $lang eq "Prolog") { 
 		$compiler="gplc";
@@ -1170,7 +1270,9 @@ using namespace std; /* <- a bad habit, but makes it simpler CS 201 & 202 code *
 
 	}
 	elsif ( $lang eq "Assembly-NASM") { ################# NASM Assembly
+		push(@cflags,"-no-pie"); # avoid relocation warning
 		$compiler="nasm -f elf32 ";
+		$linker='g++ -fopenmp -no-pie $(CFLAGS) ';
 		$srcext="S";
 		$srcpre .='
 section .text
@@ -1178,7 +1280,7 @@ global foo
 ';
 		if ($mode eq 'frag') { # Subroutine fragment
 			$srcpre .="\nfoo:\n" . $gradecode;
-			$srcpost=$gradepost . "\nret";
+			$srcpost=$gradepost . "\n";
 		} else {
 			$srcpre .=$gradecode;
 			$srcpost.=$gradepost;
@@ -1418,10 +1520,21 @@ section .text
 		$srcext='pl';
 		$saferun=$scriptrun . '/usr/bin/perl '
 	}
+	elsif ( $lang eq "Postscript") {
+		$netrun='netrun/scripting';
+		$srcext='ps';
+		$saferun=$scriptrun . '/usr/bin/gs_run < '
+	}
 	elsif ( $lang eq "PHP") {
 		$netrun='netrun/scripting';
 		$srcext='php';
 		$saferun=$scriptrun . '/usr/bin/php '
+	}
+	elsif ( $lang eq "Scheme") {
+		$netrun='netrun/scripting';
+		$srcext='scm';
+		$srcpre .= '(define (print thing) (display thing) (display "\n"))';
+		$saferun=$scriptrun . '/usr/bin/mit-scheme-x86-64 --load '
 	}
 	elsif ( $lang eq "JavaScript") {
 		$srcpre .= "function print() {console.log.apply(null,arguments);}\n";
@@ -1504,71 +1617,19 @@ const int program[]={';
 
 
 	if ( $lang eq "CUDA") {
-		$sr_host=$gpu_host;
-		if ($mode ne 'main') { # add headers and gpu_vec:
-			$srcpre='#include <cuda.h>
+		# $sr_host=$gpu_host;
+		if ($mach eq "skylake64") {
+			print "NVIDIA GeForce 980 Ti (2015) and ";
+		}
+		if ($mach eq "threadripper") {
+			print "NVIDIA GeForce 2080 Ti (2018) and ";
+		}
+		
+		# add headers
+		$srcpre='#include <cuda.h>
 #include <cassert>
 #include <vector>
 #include <iostream>
-
-/* Lawlor NetRun CUDA utility functions: */
-#define gpu_check(cudacall) { int err=cudacall; if (err!=cudaSuccess) { std::cout<<"CUDA ERROR "<<err<<" at line "<<__LINE__<<": "<<#cudacall<<"\n"; exit(1); } }
-
-/* CPU side class to represent an array in GPU memory */
-template <class T>
-class gpu_vec {
-	T *ptr; // points to GPU memory
-	unsigned long len; // number of T elements allocated
-public:
-	// Make a null vector
-	gpu_vec() :ptr(0), len(0) {}
-	// Make an empty (uninitialized) vector of this length
-	gpu_vec(unsigned long size) :ptr(0),len(size) {
-		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
-	}
-	// Copy from this CPU-side vector
-	gpu_vec(const std::vector<T> &vec) :ptr(0),len(vec.size()) {
-		gpu_check(cudaMalloc((void **)&ptr, len*sizeof(T)));
-		copy_from(vec);
-	}
-	// Deallocate the GPU data
-	~gpu_vec() {
-		if (ptr) gpu_check(cudaFree(ptr));
-		ptr=0; len=0;
-	}
-	
-	// Return the length of our vector
-	unsigned long size() const { return len; }
-	
-	// Silently convert to a GPU T pointer.  
-	//  This is useful for calling GPU kernels.
-	//  It is NOT useful for accessing the data on the CPU side.
-	operator T* (void) const { return ptr; }
-	
-	// Explicit memcpy to pull separate elements out.
-	//   CAUTION: this is fairly slow; assign to a vector if you need lots of elements.
-	const T operator[](unsigned long idx) const {
-		T ret;
-		gpu_check(cudaMemcpy(&ret,&ptr[idx],sizeof(T),cudaMemcpyDeviceToHost));
-		return ret;
-	}
-	// Copy data from the GPU to this CPU side std::vector
-	void copy_to(std::vector<T> &vec) const {
-		vec.resize(len);
-		gpu_check(cudaMemcpy(&vec[0],&ptr[0],len*sizeof(T),cudaMemcpyDeviceToHost));
-	}
-	
-	// Copy data from this CPU side std::vector onto the GPU
-	void copy_from(const std::vector<T> &vec) {
-		assert(len==vec.size());
-		gpu_check(cudaMemcpy(&ptr[0],&vec[0],len*sizeof(T),cudaMemcpyHostToDevice));
-	}
-	
-private:
-	// if gpuvec gets copied, the pointer will get freed twice, so do not allow copying.
-	gpu_vec(const gpu_vec<T> &g);
-	void operator=(const gpu_vec<T> &g);
-};
 
 /* Zero-initialize GPU memory (to avoid weird "output never changes" bugs) */
 __global__ void gpu_mem_clear(int *mem) { 
@@ -1576,22 +1637,17 @@ __global__ void gpu_mem_clear(int *mem) {
 }
 class gpu_mem_clear_at_startup { public:
 	gpu_mem_clear_at_startup() {
-		int n=10000000;
-		gpu_vec<int> mem(n);
-		gpu_mem_clear<<< n/256, 256 >>>(mem);
-		gpu_check(cudaDeviceSynchronize());
+		int n=100000000;
+		int *gpu_mem=0;
+		cudaMalloc(&gpu_mem,n*sizeof(int));
+		gpu_mem_clear<<< n/256, 256 >>>(gpu_mem);
+		cudaFree(gpu_mem);
 	}
 } gpu_mem_clear_at_startup_singleton;
 
-
-
-/* padding here so total NetRun additions are 100 lines: so error on line 123 -> web line 23 */
-
-
 ' . $srcpre;
-		}
 		$srcext='cu';
-		$compiler='/usr/local/cuda/bin/nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
+		$compiler='nvcc -std=c++14  -keep $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib  -lcurand_static   -lculibos  ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();  # -Wall kills it
@@ -1611,16 +1667,55 @@ class gpu_mem_clear_at_startup { public:
 		$sr_host="skylake"; # $sr_port=2984;
 	}
 	elsif ($mach eq "x86") {
-	print "FYI-- This is a hyperthreaded 2.8GHz Intel Pentium 4 machine.<br>\n";
-		$sr_host="olawlor";
-		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
-		if ( $lang eq "C" || $lang eq "C++" ) { push(@cflags,"-msse3"); }
+	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores, 32-bit mode) <br>\n";
+		$sr_host="skylake";
+		$saferun="netrun/safe_run32.sh";
+		push(@cflags,"-m32");
+		if ( $lang eq "Assembly" ) { $srcpost='ret' . $gradepost; }
+		if ( $lang eq "Assembly-NASM" ) { $srcpost='ret' . $gradepost; }
 	} elsif ($mach eq "skylake64") {
 	print "Intel Skylake i7 6700K at (4.0GHz, 4 cores) <br>\n";
+		
 		$sr_host="skylake";
-		if ( $lang eq "Assembly-NASM") { $compiler="nasm -f elf64 ";}
 		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
-		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-msse4.2 -mavx2 -msse2avx"); }
+		if ( $lang eq "Assembly-NASM") { 
+			$compiler="nasm -f elf64 ";
+			$srcpost='section .text
+netrun_ran_off_end:
+	mov rdi,netrun_ran_off_end_string
+	extern puts
+	call puts
+	mov rax,0
+	ret ; added by netrun
+
+section .data
+netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
+section .text
+			' . $gradepost;
+		}
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++14" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-no-pie -msse4.2 -mavx2 -msse2avx"); }
+		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
+	} elsif ($mach eq "threadripper") {
+	print "AMD Threadripper 3990X (64 cores)<br>\n";
+		
+		$sr_host="aurora"; # SSH forward
+		if ( $lang eq "Assembly" ) { $srcpost='ret'; }
+		if ( $lang eq "Assembly-NASM") { 
+			$compiler="nasm -f elf64 ";
+			$srcpost='section .text
+netrun_ran_off_end:
+	mov rdi,netrun_ran_off_end_string
+	extern puts
+	call puts
+	mov rax,0
+	ret ; added by netrun
+
+section .data
+netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
+section .text
+			' . $gradepost;
+		}
+		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++14" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-no-pie -msse4.2 -mavx2 -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
 	} elsif ($mach eq "sandy64") {
 	print "Intel Sandy Bridge i5 2400 (3.1GHz, 4 cores)<br>\n";
@@ -1677,42 +1772,16 @@ class gpu_mem_clear_at_startup { public:
 #include <stdio.h>
 #include "lib/inc.h"
 #';
-	} elsif ( $mach eq "Alpha") {
-	print "FYI-- This is a 233Mhz DEC Alpha CPU with 32MB RAM<br>\n";
-		$sr_host="dec1";
-	} elsif ( $mach eq "SPARC") {
-	print "FYI-- This is a 350MHz UltraSparc IIi CPU.<br>\n";
-		$sr_host="ultra52";
-	} elsif ( $mach eq "ARM") {
-	print "FYI-- This is a 500MHz Samsung S3C6410 ARMv6 CPU.<br>\n";
-		$sr_host="viz1";
-		$sr_port=2984;
-		$saferun="netrun/safe_arm.sh";
-		
-		$disassembler="objdump -drC";   # -M freaks out this version
-		if ( $lang eq "Assembly") { ################# GNU Assembly
-			$srcpre='
-.syntax unified  @ no #constants
-.align 2
-.code 32
-.section .text
-'. $gradecode .'
-.global foo
-';
-			if ($mode eq 'frag') { # Subroutine fragment
-				$srcpre .="\nfoo:\n";
-				$srcpost='bx lr'; 		
-			}
-		}
-
-		
-	} elsif ( $mach eq "ARMpi2") {
-	print "FYI-- This is an 900MHz Raspberry Pi 2 B+ (ARMv7r5)<br>\n";
-		$sr_host="lawpi2B";
+	} elsif ( $mach eq "ARM" || $mach eq "ARMpi2" ) {
+	print "FYI-- This is an 1.2GHz Raspberry Pi 3 (ARMv71)<br>\n";
+		$sr_host="lawpi3";
 		$sr_port=2983;
+		push(@cflags,"-fopenmp");
 		push(@cflags,"-marm");
+		push(@cflags,"-mfloat-abi=hard");
+		push(@cflags,"-mfpu=neon");
 		if ( $lang eq "Assembly") {
-			$compiler="as -mcpu=cortex-a7 -mfpu=vfpv4 "; 
+			$compiler="as -mcpu=cortex-a7 -mfpu=neon "; 
 		}
 		$disassembler="objdump -drC";   # -M freaks out this version
 		if ( $lang eq "Assembly") { ################# GNU Assembly
@@ -1729,7 +1798,26 @@ class gpu_mem_clear_at_startup { public:
 				$srcpost='bx lr'; 		
 			}
 		}
-		
+	} elsif ( $mach eq "ARMpi4" ) {
+	print "FYI-- This is an 1.5GHz Raspberry Pi 4 (ARMv8 in 64-bit mode)<br>\n";
+		$sr_host="137.229.25.24";
+		$sr_port=2983;
+		push(@cflags,"-fPIC");
+		if ( $lang eq "Assembly") {
+			$compiler="as "; 
+		}
+		$disassembler="objdump -drC";   # -M freaks out this version
+		if ( $lang eq "Assembly") { ################# GNU Assembly
+			$srcpre='
+.text
+'. $gradecode .'
+.global foo
+';
+			if ($mode eq 'frag') { # Subroutine fragment
+				$srcpre .="\nfoo:\n";
+				$srcpost='ret'; 		
+			}
+		}
 	} elsif ( $mach eq "win32") {
 	print "WARNING-- Win32 machine is emulated with QEMU, and may be slow (half a minute!)<br>\n";
 		@cflags=("/EHsc","/DWIN32=1");
@@ -2005,7 +2093,7 @@ sub my_sysuser {
 	
 	if ($res != 0) {
 		print $q->hr,$q->h2("$what Error:");
-		my_prefile($outfile,'-bg','#FF8888');
+		my_prefile($outfile,'-bg','error');
 		print "While running command '$cmd' with input file '$src':";
 		my_prefile($src,'-line');
 		exit(0);
@@ -2026,7 +2114,7 @@ sub my_prefile {
 	my $src=shift;
 	my $linePrint=0;
 	my $lineNo=0;
-	my $bgColor="#CCCCCC";
+	my $bgColor="default";
 	while (@_) {
 		my $arg=shift;
 		if ($arg eq "-line") {$linePrint=1;}
@@ -2048,7 +2136,7 @@ sub my_prefile {
 		print"</PRE></TD><TD>";
 	}
 	
-	print '<TD BGCOLOR="'.$bgColor.'"><PRE>';
+	print '<TD CLASS="'.$bgColor.'"><PRE>';
 	my $line;
 	open(F,"<$src") or err("Could not open file '$src'");
 	foreach $line (<F>) {

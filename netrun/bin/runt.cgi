@@ -1157,6 +1157,10 @@ sub create_project_directory {
 ###############################################	
 # Language switch
 	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
+		if (substr($mach,0,3) ne "ARM") {
+			push(@cflags,"-fcf-protection=none"); # avoid "endbr64" noise on x86 (new gcc default)
+		}
+
 		$compiler='g++ $(CFLAGS)';
 		if ($lang ne "CUDA" ) {
 			push(@cflags,"-fopenmp"); # accept pragma omp by default
@@ -1617,7 +1621,14 @@ const int program[]={';
 
 
 	if ( $lang eq "CUDA") {
-		$sr_host=$gpu_host;
+		# $sr_host=$gpu_host;
+		if ($mach eq "skylake64") {
+			print "NVIDIA GeForce 980 Ti (2015) and ";
+		}
+		if ($mach eq "threadripper") {
+			print "NVIDIA GeForce 2080 Ti (2018) and ";
+		}
+		
 		# add headers
 		$srcpre='#include <cuda.h>
 #include <cassert>
@@ -1640,7 +1651,7 @@ class gpu_mem_clear_at_startup { public:
 
 ' . $srcpre;
 		$srcext='cu';
-		$compiler='nvcc --gpu-architecture compute_30 -std=c++11  -keep $(CFLAGS)';
+		$compiler='nvcc -std=c++14  -keep $(CFLAGS)';
 		$linker="$compiler -Xlinker -R/usr/local/cuda/lib  -lcurand_static   -lculibos  ";
 		$disassembler="cat code.ptx; echo ";
 		# @cflags=();  # -Wall kills it
