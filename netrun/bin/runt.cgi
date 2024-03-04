@@ -768,9 +768,10 @@ END_ACE
 			'C++14',
 			'C++17',
 			'C',
+			'Rust',
 			'Assembly-NASM',
-			'Assembly',
-			'Fortran 77',
+			'Assembly',			
+#			'Fortran 77',
 			'OpenMP',
 			'MPI',
 			'CUDA',
@@ -1156,7 +1157,20 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
+	if ( $lang eq "Rust") {
+		$compiler="echo ";
+		$linker="echo ";
+		$srcext="rs";
+		$name="code";
+		$netrun="netrun/rust";
+		$srcpre = $gradecode;
+		if ($mode eq 'frag') { # Function fragment
+			$srcpre=$srcpre . "pub fn foo() -> i64 {\n";
+			$srcpost="\n";
+			$srcpost .= "}\n" . $gradepost;
+		}
+	}
+	elsif ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
 		if (substr($mach,0,3) ne "ARM") {
 			push(@cflags,"-fcf-protection=none"); # avoid "endbr64" noise on x86 (new gcc default)
 		}
