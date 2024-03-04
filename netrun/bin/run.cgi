@@ -1161,7 +1161,6 @@ sub create_project_directory {
 		$compiler="echo ";
 		$linker="echo ";
 		$srcext="rs";
-		$name="code";
 		$netrun="netrun/rust";
 		$srcpre = $gradecode;
 		if ($mode eq 'frag') { # Function fragment
