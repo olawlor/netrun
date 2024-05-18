@@ -1170,13 +1170,12 @@ sub create_project_directory {
 		}
 	}
 	elsif ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
-		if (substr($mach,0,3) ne "ARM") {
-			push(@cflags,"-fcf-protection=none"); # avoid "endbr64" noise on x86 (new gcc default)
-		}
-
 		$compiler='g++ $(CFLAGS)';
 		if ($lang ne "CUDA" ) {
 			push(@cflags,"-fopenmp"); # accept pragma omp by default
+			if (substr($mach,0,3) ne "ARM") {
+				push(@cflags,"-fcf-protection=none"); # avoid "endbr64" noise on x86 (new gcc default)
+			}
 		}
 		if (grep(/^Profile$/, @orun)!=1) { # -pg and -fomit don't work together
 			push(@cflags,"-fomit-frame-pointer");
