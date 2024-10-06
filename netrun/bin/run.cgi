@@ -1327,8 +1327,8 @@ TraceASM_stack_end:
 
 section .text
 
-;  trace arguments: %1 is line number; %2 is code being executed.
-%macro TraceASM 2
+;  trace arguments: %1 is line number; %2 is code being executed; %3 is the next line of code.
+%macro TraceASM 3
 
 ; Basic idea: show differences in machine state after each line of x86 code.
 ; Need a user-visible copy of all machine state:
@@ -1384,11 +1384,14 @@ section .text
 	mov rsi,%%codestring
 	mov rdx,TraceASM_state
 	mov rcx,TraceASM_state_end-TraceASM_state
+	mov r8,%%codestring_next
 	extern TraceASM_cside
 	call TraceASM_cside
 	jmp %%restore_TraceASM
 
 %%codestring: db %2,0
+%%codestring_next: db %3,0
+
 	
 ; Restore the machine from the single TraceASM_state:
 %%restore_TraceASM:
@@ -1439,38 +1442,52 @@ section .text
 			# Add TraceASM macro calls to each line of the code
 			#  FIXME: don't trace section, data, strings, globals, etc.
 			#   and trim comments.
-			my $newcode = "TraceASM 0,\"Startup\"\n\n";
+			my $newcode = ""; # "TraceASM 0,\"Startup\",\"\"\n\n";
+			my $lastline = "";
+			my $lastlineno = 0;
 			my $lineno=0;
 			for my $line (split /^/, $code) {
 				$lineno+=1;
 				chomp($line); # trim newline
 
-				# Add original code:
-				$newcode .= "$line\n";
+				# Save original code:
+				my $nextcode = "$line\n";
 				
 				if ($line =~ /^([^;]*);.*/) { 
 					$line=$1; # strip comments
 				}
 				if ($line =~ /^\s*[a-zA-Z0-9_]*\s*:(.*)/) { 
-					$line=$1; # strip labels
+					# $line=$1; # strip labels
 				}
+				my $skip = 0;
 				if ($line =~ /section /i) {
-					next; # skip section markers
+					$skip=1; # skip section markers
 				}
 				if ($line =~ /times /i) {
-					next; # skip repeated stuff
+					$skip=1; # skip repeated stuff
 				}
 				if ($line =~ /^\s*d[bwdq] /i) {
-					next; # skip data declarations
+					$skip=1; # skip data declarations
 				}
 				if ($line =~ /['"`]/) {
-					next; # skip lines with quote chars
+					$skip=1; # skip lines with quote chars
 				}				
 				if ($line =~ /^\s*$/) {
-					next; # skip blank lines
+					$skip=1; # skip blank lines
 				}
 				
-				$newcode .= "TraceASM $lineno,'$line'\n";
+				if ($skip == 0) 
+				{
+					$newcode .= "TraceASM $lastlineno,'$lastline','$line'\n";
+				}
+				
+				$newcode .= $nextcode;
+				
+				if ($skip == 0) 
+				{
+					$lastline = $line;
+					$lastlineno = $lineno;
+				}
 
 			}
 			$code=$newcode;

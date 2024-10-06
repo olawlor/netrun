@@ -6,6 +6,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <algorithm> /* for std::sort */
 #include "inc.h"
 
@@ -398,7 +399,8 @@ struct machine_state {
 #ifdef __cplusplus
 extern "C" 
 #endif
-void TraceASM_cside(long line,const char *code,struct machine_state *state,long state_bytes)
+void TraceASM_cside(long line,const char *code,struct machine_state *state,long state_bytes,
+	const char *code_next)
 {
 	static const char *reg_names[machine_registers]={
 		"rax","rcx","rdx","rbx",
@@ -407,6 +409,7 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 		"r12","r13","r14","r15"
 	};
 	int i;
+	static const char *code_next_last = NULL;
 	static struct machine_state last;
 	int nprinted=0;
 	char flags[10];
@@ -419,6 +422,11 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 		return;
 	}
 	
+	if (code_next_last != NULL && 0!=strcmp(code_next_last,code)) {
+		// Jumped out from last call
+		printf("TraceASM      %-30s -> jumped out\n", code_next_last);
+	}
+	
 	// Decode x86 EFLAGS register
 	if (state->flags & (1<< 0)) flags[0]='C'; else flags[0]='c'; // carry
 	if (state->flags & (1<< 2)) flags[1]='P'; else flags[1]='p'; // parity
@@ -428,8 +436,10 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 	flags[5]=0;
 	
 	if (line>0)
+	{
+	        code_next_last = code_next;
 		printf("TraceASM %3ld  %-30s    %s   ",line,code,flags);
-	
+	}
 	// Dump any changed registers
 	for (i=0;i<machine_registers;i++) {
 		long v=state->regs[i];
