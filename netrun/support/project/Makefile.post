@@ -63,6 +63,12 @@ netrun/image: out.jpg
 	@echo '<&@SNIP@&>'
 	@cat out.jpg
 
+netrun/rust: $(USER_CODE)
+	@cp $< netrun/rust-netrun/src/foo.rs
+	@cd netrun/rust-netrun; ln -s .. netrun
+	@cd netrun/rust-netrun; netrun/run.sh "Build" src/foo.rs   cargo build --quiet --release
+	@ netrun/run.sh "Run" "$(USER_CODE)" \
+		$(SAFERUN) netrun/rust-netrun/target/release/rust-netrun $(INPUT)
 
 export DISPLAY:= :0
 
