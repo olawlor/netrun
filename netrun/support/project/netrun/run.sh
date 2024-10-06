@@ -27,8 +27,6 @@ then
 
 	echo '<TABLE><TR><TD CLASS="'$color'">
 <! @NetRun/'$desc'@ begin >'
-#  Sadly, -c fails on IRIX:
-#	cat out | head -c 20000 | head -n 200 > out_lil
 	cat out | head -n 10000 > out_lil
 	mv out_lil out
 	cat out | netrun/filter_htmlpre.pl
