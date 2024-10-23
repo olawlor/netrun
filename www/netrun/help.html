@@ -264,12 +264,12 @@ Example</span>: cat("code.exe"); // prints the compiled executable<br>
 
 
 <p>The main program prints out the value returned from the "foo"
-function you write, and x86 functions return their value in register eax,
-so you can see what's in register eax by just returning--it'll get printed out.
+function you write, and x86 functions return their value in register rax,
+so you can see what's in register rax by just returning--it'll get printed out.
 
 </p><p>At the moment, there's no easy way to see what's in all the registers
 other than intentionally crashing, like doing a read-from-NULL:
-</p><pre>	mov eax,[0]<br></pre>You get an informative printout when you
+</p><pre>	mov rax,[0]<br></pre>You get an informative printout when you
 crash because NetRun registers a whole set of signal handlers (for
 segmentation fault, floating point exception, illegal instruction,
 etc.).&nbsp; If you're interested in how this works, use the "Download
@@ -285,7 +285,7 @@ this file as a .tar archive" link and read project/lib/signal.c.
 program.&nbsp;
 This function may trash (i.e., change) all other registers, so be sure
 to call it before doing anything else!&nbsp;&nbsp;read_input, like any 
-function, returns its value in the eax register. </li><li>Use eax as input to whatever computation you need to do.</li>
+function, returns its value in the rax register. </li><li>Use rax as input to whatever computation you need to do.</li>
 <li>In the NetRun GUI, click "Input" checkbox to display the input 
 data edit box.</li>
 <li>Enter the program's input data--just numbers--in the input data edit 
@@ -353,6 +353,7 @@ project, and run it on your own machine!<br>
 
 Changes:
 <UL>
+	<li>Upgraded to 64-bit rax in examples, from eax (2024-09-18)
 	<li>Removed 'using namespace std;', added using declarations for cin and cout only. (2019-03-28)
 	<li>ACE editor support (2016-02-05, thanks to Noah Betzen)
 	<li>Disqus comments for homeworks after OK! (2014-08-22)

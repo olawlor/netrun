@@ -905,7 +905,7 @@ END_ACE
 	}
 
 	print "<hr>";
-	print "Version 2022-09-04 Highlight";
+	print "Version 2024-10-22 Removed Disqus (privacy leak)";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -959,31 +959,12 @@ sub compile_and_run {
 	#	print $res;
 	# }
 
-	# Check for grading-OK message:
+	# Check for grading-OK message (FIXME: multi-submit race condition here!)
 	my $hwnum = checkhwnum();
 	if ( $hwnum && $res =~ m/GRADEVAL="@<YES!>&">/ ) {
 		my $hw_und=slash_to_underscore($hwnum);
 		journal("hwok $hw_und");
 		system("cp","$proj->{src}","hw/$hw_und");
-		
-		if ($rel_url ne "runa") { 
-	
-			print '<p>Now that you\'ve solved it, feel free to discuss the issues in this homework here:
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-        var disqus_shortname = "netrun"; // required: replace example with your forum shortname
-	var disqus_url = "https://lawlor.cs.uaf.edu/netrun/run?hw='.$hwnum.'";
-        (function() {
-            var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
-            dsq.src = "//" + disqus_shortname + ".disqus.com/embed.js";
-            (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-';
-		}
 	}
 }
 
