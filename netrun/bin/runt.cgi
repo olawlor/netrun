@@ -847,6 +847,7 @@ END_ACE
 			#	'Alpha',
 				'ARM',
 				'ARMpi4',
+				'RISCV',
 			#	'SPARC',
 			#	'MIPS',
 			#	'PPC',
@@ -871,6 +872,7 @@ END_ACE
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
 				'ARM' => 'ARM (Raspberry Pi 3)',
 				'ARMpi4' => 'ARM64 (Pi 4)',
+				'RISCV' => 'RISC-V (VisionFive 2)',
 			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 			#	'MIPS' => 'MIPS (SGI IRIX)',
 			#	'PPC' => 'PowerPC (OS X)',
@@ -1154,7 +1156,7 @@ sub create_project_directory {
 		$compiler='g++ $(CFLAGS)';
 		if ($lang ne "CUDA" ) {
 			push(@cflags,"-fopenmp"); # accept pragma omp by default
-			if (substr($mach,0,3) ne "ARM") {
+			if (substr($mach,0,3) ne "ARM" and substr($mach,0,4) ne "RISC") {
 				push(@cflags,"-fcf-protection=none"); # avoid "endbr64" noise on x86 (new gcc default)
 			}
 		}
@@ -1822,6 +1824,26 @@ section .text
 		}
 		$disassembler="objdump -drC";   # -M freaks out this version
 		if ( $lang eq "Assembly") { ################# GNU Assembly
+			$srcpre='
+.text
+'. $gradecode .'
+.global foo
+';
+			if ($mode eq 'frag') { # Subroutine fragment
+				$srcpre .="\nfoo:\n";
+				$srcpost='ret'; 		
+			}
+		}
+	} elsif ( $mach eq "RISCV" ) {
+	print "FYI-- This is a VisionFive 2 (JH7110) RV64GC<br>\n";
+		$sr_host="starfive";
+		$sr_port=2983;
+		push(@cflags,"-fopenmp");
+		if ( $lang eq "Assembly") {
+			$compiler="as "; 
+		}
+		$disassembler="objdump -drC";   # -M freaks out this version
+		if ( $lang eq "Assembly") { ###### GNU Assembly
 			$srcpre='
 .text
 '. $gradecode .'
