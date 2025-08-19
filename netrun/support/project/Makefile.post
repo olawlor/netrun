@@ -70,6 +70,13 @@ netrun/rust: $(USER_CODE)
 	@ netrun/run.sh "Run" "$(USER_CODE)" \
 		$(SAFERUN) netrun/rust-netrun/target/release/rust-netrun $(INPUT)
 
+netrun/swift: $(USER_CODE)
+	@cp $< netrun/swift-netrun/foo.swift
+	@cd netrun/swift-netrun; netrun/run.sh "Build" src/foo.swift   swiftc foo.swift
+	@ netrun/run.sh "Run" "$(USER_CODE)" \
+		$(SAFERUN) netrun/swift-netrun/foo $(INPUT)
+
+
 export DISPLAY:= :0
 
 netrun/glfp: $(USER_CODE)
