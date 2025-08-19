@@ -70,8 +70,8 @@ netrun/rust: $(USER_CODE)
 	@ netrun/run.sh "Run" "$(USER_CODE)" \
 		$(SAFERUN) netrun/rust-netrun/target/release/rust-netrun $(INPUT)
 
-netrun/swift: netrun/obj
-	@. /etc/swiftly/env.sh; netrun/run.sh "Link" src/foo.swift   swiftc foo.o
+netrun/swift: netrun/obj  $(USER_OBJ)
+	@. /etc/swiftly/env.sh; netrun/run.sh "Link" $(USER_CODE)  swiftc $(USER_OBJ)
 	@ netrun/run.sh "Run" "$(USER_CODE)" \
 		$(SAFERUN) foo $(INPUT)
 
