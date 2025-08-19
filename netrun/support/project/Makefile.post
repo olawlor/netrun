@@ -72,7 +72,7 @@ netrun/rust: $(USER_CODE)
 
 netrun/swift: $(USER_CODE)
 	@cp $< netrun/swift-netrun/foo.swift
-	@cd netrun/rust-netrun; ln -s .. netrun
+	@cd netrun/swift-netrun; ln -s .. netrun
 	@cd netrun/swift-netrun; netrun/run.sh "Build" src/foo.swift   swiftc foo.swift
 	@ netrun/run.sh "Run" "$(USER_CODE)" \
 		$(SAFERUN) netrun/swift-netrun/foo $(INPUT)
