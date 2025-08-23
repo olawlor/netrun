@@ -768,6 +768,7 @@ END_ACE
 			'C++14',
 			'C++17',
 			'C',
+			'Swift',
 			'Rust',
 			'Assembly-NASM',
 			'Assembly',			
@@ -1140,7 +1141,29 @@ sub create_project_directory {
 
 ###############################################	
 # Language switch
-	if ( $lang eq "Rust") {
+	if ( $lang eq "Swift") {
+		@cflags=();
+		push(@cflags,"-I platform/swift ");
+		if (grep(/^Optimize$/, @ocompile)==1) {push(@cflags,"-O");}
+		@lflags=@cflags;
+
+		$compiler='swiftc -emit-object -parse-as-library  -module-name NetRun  $(CFLAGS) ';
+		$linker="swiftc ";
+
+		$main="platform/swift/NetRun/NetRun.swift platform/swift/main.swift ";
+		$srcext="swift";
+		# $netrun="netrun/swift";
+		$srcpre = $gradecode;
+		if ($mode eq 'frag') { # Function fragment
+			$srcpre=$srcpre . "import Foundation\n";
+			$srcpre=$srcpre . '@_cdecl("foo")' . "\npublic func foo() -> Int {\n";
+			$srcpost .= "}\n" . $gradepost;
+
+		#	$srcpost = "\n";
+		#	$srcpost .= $gradepost;
+		}
+	}
+	elsif ( $lang eq "Rust") {
 		$compiler="echo ";
 		$linker="echo ";
 		$srcext="rs";
@@ -1722,7 +1745,7 @@ section .text
 netrun_ran_off_end:
 	mov rdi,netrun_ran_off_end_string
 	extern puts
-	call puts
+	call puts wrt ..plt
 	mov rax,0
 	ret ; added by netrun
 
