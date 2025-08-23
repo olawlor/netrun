@@ -1,0 +1,4 @@
+module foo [system] {
+    header "foo.h"
+    export *
+}

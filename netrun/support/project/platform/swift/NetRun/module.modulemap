@@ -1,0 +1,4 @@
+module NetRun [system] {
+    header "bar.h"
+    export *
+}

@@ -64,17 +64,16 @@ netrun/image: out.jpg
 	@cat out.jpg
 
 netrun/rust: $(USER_CODE)
-	@cp $< netrun/rust-netrun/src/foo.rs
-	@cd netrun/rust-netrun; ln -s .. netrun
-	@cd netrun/rust-netrun; netrun/run.sh "Build" src/foo.rs   cargo build --quiet --release
+	@cp $< platform/rust/src/foo.rs
+	@cd platform/rust; ln -s .. netrun
+	@cd platform/rust; netrun/run.sh "Build" src/foo.rs   cargo build --quiet --release
 	@ netrun/run.sh "Run" "$(USER_CODE)" \
-		$(SAFERUN) netrun/rust-netrun/target/release/rust-netrun $(INPUT)
+		$(SAFERUN) platform/rust/target/release/rust-netrun $(INPUT)
 
-netrun/swift: netrun/obj  $(USER_OBJ)
-	@. /etc/swiftly/env.sh; netrun/run.sh "Link" $(USER_CODE)  swiftc $(USER_OBJ)
-	@ netrun/run.sh "Run" "$(USER_CODE)" \
-		$(SAFERUN) foo $(INPUT)
-
+netrun/swift: $(USER_CODE)
+	@ netrun/run.sh "Compile" $(USER_CODE) $(COMPILER) $(USER_CODE)
+	@ netrun/run.sh "Link" $(USER_CODE)  $(LINKER) $(LINKWITH) $(NAME).o platform/swift/main.swift
+	@ netrun/run.sh "Run" "$(USER_CODE)" $(SAFERUN) ./main $(INPUT)
 
 export DISPLAY:= :0
 
