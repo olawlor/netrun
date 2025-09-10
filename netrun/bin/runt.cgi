@@ -1153,10 +1153,34 @@ sub create_project_directory {
 		$main="platform/swift/NetRun/NetRun.swift platform/swift/main.swift ";
 		$srcext="swift";
 		# $netrun="netrun/swift";
+		
+		my $src="project/platform/swift/foo/foo.h";
+		open(SRC,">$src") or err("Cannot create source file $src");
+		print SRC "#define NETRUN_FOO_DECL $proto\n";
+		print SRC "NETRUN_FOO_DECL;\n";
+		close(SRC);
+
+		my $swarg = "";
+		if ($arg0 eq "int" or $arg0 eq "long") { $swarg = "_ bar : Int"; }
+		elsif ($arg0 eq "std::string") { $swarg = "_ bar : String"; }
+		elsif ($arg0 eq "float") { $swarg = "_ bar : Float"; }
+		elsif ($arg0 eq "double") { $swarg = "_ bar : Double"; }
+		elsif ($arg0 eq "void") { $swarg = ""; }
+		else { print("Ignoring argument type $arg0<br>"); }
+		
+		my $swret = "";
+		if ($ret eq "int" or $ret eq "long") { $swret = "-> Int"; }
+		elsif ($ret eq "std::string") { $swret = "-> String"; }
+		elsif ($ret eq "float") { $swret = "-> Float"; }
+		elsif ($ret eq "double") { $swret = "-> Double"; }
+		elsif ($ret eq "sse_float4") { $swret = "-> simd_float4"; }
+		elsif ($ret eq "void") { $swret = ""; }
+		else { print("Ignoring return type $ret<br>"); }
+		
 		$srcpre = $gradecode;
 		if ($mode eq 'frag') { # Function fragment
 			$srcpre=$srcpre . "import Foundation\n";
-			$srcpre=$srcpre . '@_cdecl("foo")' . "\npublic func foo() -> Int {\n";
+			$srcpre=$srcpre . '@_cdecl("foo")' . "\npublic func foo($swarg) $swret {\n";
 			$srcpost .= "}\n" . $gradepost;
 
 		#	$srcpost = "\n";
