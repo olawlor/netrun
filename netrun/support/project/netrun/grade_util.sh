@@ -65,10 +65,10 @@ grade_io_prog() {
 	for i in $in
 	do
 		precrap="$precrap"'Please enter an input value:
-read_input> Returning '`echo $i | gawk '{
+read_input> Returning '`echo $i | gawk -M '{
 	b_and=$1;
 	# Unfortunately, awk negative numbers are not the same as C...
-        if (b_and<0) {b_and=xor(0xffFFffFF,-b_and)+1;}
+        if (b_and<0) {b_and=xor(0xffFFffFFffFFffFF,-b_and)+1;}
 	printf("%d (0x%X)\n",$1,b_and);
 }'`'
 '
