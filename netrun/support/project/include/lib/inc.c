@@ -47,10 +47,7 @@ long read_input(void) {
 	}
 	printf("Please enter an input value:\n");
 	fflush(stdout);
-	if (ret<0) /* 32-bit output, for backward compatibility */
-		printf("read_input> Returning %ld (0x%X)\n",ret,(int)ret);
-	else
-		printf("read_input> Returning %ld (0x%lX)\n",ret,ret);
+	printf("read_input> Returning %ld (0x%lX)\n",ret,ret);
 	fflush(stdout);
 	return ret;
 }
