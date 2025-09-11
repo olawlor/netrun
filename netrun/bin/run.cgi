@@ -885,7 +885,7 @@ END_ACE
 	print
 		"<p>Compile options:",
 		$q->checkbox_group(-name=>'ocompile',
-			-values=>['TraceASM','Optimize','Debug','Warnings','Verbose'],
+			-values=>['TraceASM','Optimize','Debug','Warnings','Verbose','Execstack'],
 			-defaults=>['Optimize','Warnings']),"<br>\n";
 
 	print
@@ -1754,6 +1754,9 @@ netrun_ran_off_end:
 section .data
 netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
 section .text
+
+; Linux needs this to make the stack not be executable:
+section .note.GNU-stack noalloc noexec nowrite progbits
 			' . $gradepost;
 		}
 		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++14" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-no-pie -msse4.2 -mavx2 -msse2avx"); }
@@ -1776,7 +1779,14 @@ netrun_ran_off_end:
 section .data
 netrun_ran_off_end_string: db "Your assembly needs a ret at the end."
 section .text
-			' . $gradepost;
+';
+			if (grep(/^Execstack$/, @ocompile)!=1) {
+				$srcpost = $srcpost . '
+				; Linux needs this to make the stack not be executable:
+				section .note.GNU-stack noalloc noexec nowrite progbits';
+			}
+
+			$srcpost = $srcpost . $gradepost;
 		}
 		if ( $lang eq "C" || $lang eq "C++" || $lang eq "C++0x" || $lang eq "C++14" || $lang eq "C++17" || $lang eq "OpenMP" ) { push(@cflags,"-no-pie -msse4.2 -mavx2 -msse2avx"); }
 		if ($lang eq "OpenMP") {$compiler=$linker='g++ -fopenmp $(CFLAGS)';}
