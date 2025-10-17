@@ -155,6 +155,26 @@ void sig_handler(int sig, siginfo_t *HowCome, void *ucontextv) {
 	bp=*(unsigned long *)(r->gpr[1]);
 	sp=r->gpr[1];
 	}
+#elif defined(__AARCH64EL__) 
+	if (0) printf("ARM64 machine detected\n");
+	ucontext_t *uc=(ucontext_t *)ucontextv;
+	if (0) printf("ucontext: %p\n",uc);
+	struct sigcontext *mc=(struct sigcontext *)(&uc->uc_mcontext);
+	if (0) printf("sigcontext: %p\n",mc);
+#define preg "0x%016llx "
+	__u64 *regs=&mc->regs[0];
+	printf("ARM64 Registers: pc=" preg "  sp=" preg "\n",
+		mc->pc,mc->sp);
+	for (int i=0;i<31;i++)
+		printf("x%d%s = " preg "%s",
+			i, // register i
+			i<10?" ":"", // add space after single-digit regs, to align print
+			regs[i], // register value
+			i%4==3?"\n":"" // break up lines
+		);
+	printf("\n");
+	pc=(unsigned long)mc->pc;
+	sp=(unsigned long)mc->sp;
 #elif defined(__arm__) 
 	if (0) printf("ARM machine detected\n");
 	ucontext_t *uc=(ucontext_t *)ucontextv;

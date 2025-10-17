@@ -22,11 +22,14 @@ extension Float: Argumentable, Returnable {
     static func make_argument() -> Float { return read_float() }
     static func display_return(_ value: Float) { return netrun_handle_ret(value) }
 }
+extension Double: Argumentable, Returnable {
+    static func make_argument() -> Double { return Double(read_float()) }
+    static func display_return(_ value: Double) { return netrun_handle_ret(value) }
+}
 extension String: Argumentable, Returnable {
     static func make_argument() -> String { return read_string() }
     static func display_return(_ value: String) { return netrun_handle_ret(value) }
 }
-
 
 func netrun_call<A,R>(f: (A) -> R) where A: Argumentable, R: Returnable {
 	let input = A.make_argument()

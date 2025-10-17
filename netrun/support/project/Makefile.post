@@ -64,9 +64,9 @@ netrun/image: out.jpg
 	@cat out.jpg
 
 netrun/rust: $(USER_CODE)
-	@cp $< platform/rust/src/foo.rs
-	@cd platform/rust; ln -s .. netrun
-	@cd platform/rust; netrun/run.sh "Build" src/foo.rs   cargo build --quiet --release
+	@ cp $< platform/rust/src/foo.rs
+	@ cd platform/rust; ln -s ../../netrun .
+	@ cd platform/rust; netrun/run.sh "Build" src/foo.rs   cargo build --quiet --release
 	@ netrun/run.sh "Run" "$(USER_CODE)" \
 		$(SAFERUN) platform/rust/target/release/rust-netrun $(INPUT)
 

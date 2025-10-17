@@ -385,12 +385,20 @@ void dump_ascii(const void *ptr,long nbits)
 
 
 /********* TraceASM support ******************/
-#define machine_registers 16
 struct machine_state {
+#ifdef __AARCH64EL__
+#define machine_registers 8 /* only print 8 */
+	long regs[32];
+	float xmm[32][4];
+	long flags;
+#else
+// Assume some sort of x86
+#define machine_registers 16
 	long regs[machine_registers];
 	float xmm[machine_registers][4];
 	long flags;
 	long padding1;
+#endif
 };
 
 #ifdef __cplusplus
@@ -399,12 +407,23 @@ extern "C"
 void TraceASM_cside(long line,const char *code,struct machine_state *state,long state_bytes,
 	const char *code_next)
 {
+#ifdef __AARCH64EL__
+	static const char *reg_names[machine_registers]={
+		"x0","x1","x2","x3",
+		"x4","x5","x6","x7"
+	};
+	const int sp_reg=31; // sp
+#else
+// Assume some sort of x86 (avoid crash if not defined)
 	static const char *reg_names[machine_registers]={
 		"rax","rcx","rdx","rbx",
 		"rsp","rbp","rsi","rdi",
 		"r8","r9","r10","r11",
 		"r12","r13","r14","r15"
 	};
+	const int sp_reg=4; // rsp
+#endif
+
 	int i;
 	static const char *code_next_last = NULL;
 	static struct machine_state last;
@@ -424,6 +443,11 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 		printf("TraceASM      %-30s -> jumped out\n", code_next_last);
 	}
 	
+	flags[0]=0;
+#ifdef __AARCH64EL__
+// FIXME: save and decode flags
+#else
+// assume some flavor of x86
 	// Decode x86 EFLAGS register
 	if (state->flags & (1<< 0)) flags[0]='C'; else flags[0]='c'; // carry
 	if (state->flags & (1<< 2)) flags[1]='P'; else flags[1]='p'; // parity
@@ -431,7 +455,8 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 	if (state->flags & (1<< 7)) flags[3]='S'; else flags[3]='s'; // sign
 	if (state->flags & (1<<11)) flags[4]='O'; else flags[4]='o'; // overflow
 	flags[5]=0;
-	
+#endif
+
 	if (line>0)
 	{
 	        code_next_last = code_next;
@@ -445,7 +470,7 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 				// separator from previous print:
 				if (nprinted>0) printf(",  ");
 				
-				if (i==4) // rsp changes printed relative
+				if (i==sp_reg) // rsp changes printed relative
 				{
 					long diff=v-last.regs[i];
 					printf("%s%s=%ld",reg_names[i],
