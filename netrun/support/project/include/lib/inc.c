@@ -387,13 +387,15 @@ void dump_ascii(const void *ptr,long nbits)
 /********* TraceASM support ******************/
 struct machine_state {
 #ifdef __AARCH64EL__
-#define machine_registers 8 /* only print 8 */
+#define machine_registers 32
+#define SIMD_lanes 4
 	long regs[32];
 	float xmm[32][4];
 	long flags;
 #else
 // Assume some sort of x86
 #define machine_registers 16
+#define SIMD_lanes 4
 	long regs[machine_registers];
 	float xmm[machine_registers][4];
 	long flags;
@@ -409,10 +411,13 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 {
 #ifdef __AARCH64EL__
 	static const char *reg_names[machine_registers]={
-		"x0","x1","x2","x3",
-		"x4","x5","x6","x7"
+		"x0","x1","x2","x3","x4","x5","x6","x7",
+		"x8","x9","x10","x11","x12","x13","x14","x15",
+		"x16","x17","x18","x19","x20","x21","x22","x23",
+		"x24","x25","x26","x27","x28","x29","lr","sp"
 	};
 	const int sp_reg=31; // sp
+	static const char *freg_name = "q";
 #else
 // Assume some sort of x86 (avoid crash if not defined)
 	static const char *reg_names[machine_registers]={
@@ -422,9 +427,10 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 		"r12","r13","r14","r15"
 	};
 	const int sp_reg=4; // rsp
+	static const char *freg_name = "xmm";
 #endif
 
-	int i;
+	int i,l;
 	static const char *code_next_last = NULL;
 	static struct machine_state last;
 	int nprinted=0;
@@ -445,7 +451,12 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 	
 	flags[0]=0;
 #ifdef __AARCH64EL__
-// FIXME: save and decode flags
+	if (state->flags & (1<< 31)) flags[0]='N'; else flags[0]='n'; // negative
+	if (state->flags & (1<< 30)) flags[1]='Z'; else flags[1]='z'; // zero
+	if (state->flags & (1<< 29)) flags[2]='C'; else flags[2]='c'; // carry
+	if (state->flags & (1<< 28)) flags[3]='V'; else flags[3]='v'; // overflow
+	flags[4]=0;
+	
 #else
 // assume some flavor of x86
 	// Decode x86 EFLAGS register
@@ -484,6 +495,47 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 				nprinted++;
 			}
 			last.regs[i]=v;
+		}
+	}
+	for (i=0;i<machine_registers;i++) 
+	{
+	    bool changed=false; // any change in register
+	    bool highchanged=false; // change in high channels (nonzero)
+	    for (l=0;l<SIMD_lanes;l++) {
+		    float v=state->xmm[i][l];
+		
+		    // SUBTLE: compare bits of floats, so NaN compares as equal.
+		    if (*(int *)&v != *(int *)&last.xmm[i][l]) 
+		    {
+		        changed=true;
+		        if (l>0) highchanged=true;
+			    last.xmm[i][l]=v;
+		    }
+		}
+		if (changed && line>0) {
+		    // Print the whole register if any lane changed
+		    // separator from previous print:
+			if (nprinted>0) printf(",  ");
+				
+			// Print register name
+			printf("%s%d=",freg_name,i);
+			
+			// Print the lanes, separated by commas
+			if (highchanged) printf("[");
+			for (l=0;l<(highchanged?SIMD_lanes:1);l++) {
+		        if (l>0) printf(",");
+		        
+		        float v=state->xmm[i][l];		        
+		        
+				if (v!=v) { // it's a nan, print the hex (for compares)
+				    printf("%08x",*(int *)&v);
+				}
+				else { // a regular float
+				    printf("%g",v);
+				}
+			}
+			if (highchanged) printf("]");
+			nprinted++;
 		}
 	}
 	
