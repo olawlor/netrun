@@ -1889,8 +1889,8 @@ LOCAL Lcodestring, Lcodestring_next
     stp     x28, x29, [x16, #224]
     str     x30,        [x16, #240]   /* x30 (LR) at offset 240 */
     /* store SP into offset 248 */
-    mov     x10, sp
-    str     x10,        [x16, #248]
+    mov     x17, sp
+    str     x17,        [x16, #248]
 
     /* ---------- Save vector registers v0..v31 (q0..q31, 128-bit each) ---------- */
     /* vector base offset = 256 */
@@ -1986,8 +1986,8 @@ Lcodestring_next: .asciz \codenext
     ldp     x26, x27, [x16, #208]
     ldp     x28, x29, [x16, #224]
     ldr     x30,       [x16, #240]
-    ldr     x10,       [x16, #248]
-    mov     sp, x10
+    ldr     x16,       [x16, #248]
+    mov     sp, x16
 
     /* done; fall through to the next instruction (no explicit jump) */
     .endm
@@ -2241,21 +2241,21 @@ sub addTraceASM {
 		if ($line =~ /^([^\/]*)\/\/.*/) { 
 			$line=$1; # strip comments
 		}
-		if ($line =~ /^\s*[a-zA-Z0-9_]*\s*:(.*)/) { 
-			# $line=$1; # strip labels
+		if ($line =~ /^\s*[a-zA-Z0-9_]*\s*[:](.*)/) { 
+			$line=$1; # strip labels
 		}
 		my $skip = 0;
-		if ($line =~ /section /i) {
+		if ($line =~ /^\ssection\s/i) {
 			$skip=1; # skip section markers
 		}
-		if ($line =~ /[.]/i) {
-			$skip=1; # skip dotted stuff
+		if ($line =~ /^\s*[.]/i) {
+			$skip=1; # skip dotted stuff (like .8byte)
 		}
-		if ($line =~ /times /i) {
+		if ($line =~ /^\s*times\s/i) {
 			$skip=1; # skip repeated stuff
 		}
-		if ($line =~ /^\s*d[bwdq] /i) {
-			$skip=1; # skip data declarations
+		if ($line =~ /^\s*d[bwdq]\s/i) {
+			$skip=1; # skip data declarations (like dd or dq)
 		}
 		if ($line =~ /['"`]/) {
 			$skip=1; # skip lines with quote chars
