@@ -505,7 +505,7 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 		    float v=state->xmm[i][l];
 		
 		    // SUBTLE: compare bits of floats, so NaN compares as equal.
-		    if (*(int *)&v != *(int *)&last.xmm[i][l]) 
+		    if (memcmp(&v,&last.xmm[i][l],sizeof(v))!=0)
 		    {
 		        changed=true;
 		        if (l>0) highchanged=true;
@@ -528,7 +528,9 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 		        float v=state->xmm[i][l];		        
 		        
 				if (v!=v) { // it's a nan, print the hex (for compares)
-				    printf("%08x",*(int *)&v);
+				    int iv=0;
+				    memcpy(&v,&iv,sizeof(iv));
+				    printf("%08x",iv);
 				}
 				else { // a regular float
 				    printf("%g",v);
