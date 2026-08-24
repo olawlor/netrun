@@ -1194,6 +1194,7 @@ sub create_project_directory {
 		$netrun="netrun/rust";
 		$srcpre = $gradecode;
 		if ($mode eq 'frag') { # Function fragment
+			$srcpre=$srcpre . "use std::io;\n";
 			$srcpre=$srcpre . "pub fn foo() -> i64 {\n";
 			$srcpost="\n";
 			$srcpost .= "}\n" . $gradepost;
