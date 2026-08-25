@@ -53,10 +53,27 @@ first space, underscore or dot.&nbsp; So runs named "foo.bar",
 while "foobar" will get listed on its own line.<br>
 <h2>Header Files<br>
 </h2>
-<p>A selection of useful header files are automatically included by NetRun.&nbsp; Currently, NetRun automatically includes:<br>
+<p>A selection of useful header files are automatically included by NetRun.&nbsp; Currently, in C++ NetRun automatically includes:<br>
 
 </p>
-<pre style="">#include &lt;stdio.h&gt;<br>#include &lt;stdlib.h&gt;<br>#include &lt;ctype.h&gt;<br>#include &lt;string.h&gt;<br>#include &lt;math.h&gt;<br>#include &lt;iostream&gt;<br>#include &lt;iomanip&gt;<br>#include &lt;vector&gt;<br>#include &lt;map&gt;<br>#include &lt;string&gt;<br>#include "lib/inc.h"</pre>
+<pre style="">
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctype.h&gt;
+#include &lt;cstring&gt;
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;iomanip&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;iterator&gt;
+#include &lt;map&gt;
+#include &lt;string&gt;
+#include "lib/inc.h"
+using std::cout;
+using std::cin;
+</pre>
 
 The only NetRun-specific header is "lib/inc.h".&nbsp; The functions in lib/inc.h are documented below.<br>
 
