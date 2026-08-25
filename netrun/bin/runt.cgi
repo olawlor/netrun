@@ -1195,7 +1195,7 @@ sub create_project_directory {
 		$srcpre = $gradecode;
 		if ($mode eq 'frag') { # Function fragment
 			$srcpre=$srcpre . "use std::io;\n";
-			$srcpre=$srcpre . "pub fn foo() -> i64 {\n";
+			$srcpre=$srcpre . "pub fn foo() {\n";
 			$srcpost="\n";
 			$srcpost .= "}\n" . $gradepost;
 		}
