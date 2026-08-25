@@ -1193,9 +1193,21 @@ sub create_project_directory {
 		$srcext="rs";
 		$netrun="netrun/rust";
 		$srcpre = $gradecode;
+
+		# FIXME: consider passing arguments from main (or just parse in Rust only?)
+
+		# Map return types to Rust types
+		my $swret = "";
+		if ($ret eq "int") { $swret = "-> i32"; }
+		elsif ($ret eq "long") { $swret = "-> i64"; }
+		elsif ($ret eq "std::string") { $swret = "-> String"; }
+		elsif ($ret eq "float") { $swret = "-> f32"; }
+		elsif ($ret eq "double") { $swret = "-> f64"; }
+		elsif ($ret eq "void") { $swret = ""; }
+		else { print("Ignoring return type $ret<br>"); }
+
 		if ($mode eq 'frag') { # Function fragment
-			$srcpre=$srcpre . "use std::io;\n";
-			$srcpre=$srcpre . "pub fn foo() -> i64 {\n";
+			$srcpre=$srcpre . "pub fn foo() ".$swret." {\n";
 			$srcpost="\n";
 			$srcpost .= "}\n" . $gradepost;
 		}
