@@ -871,7 +871,7 @@ END_ACE
 			#	'x86_2' => 'x86 dual P3 (Linux)',
 			#	'486' => '486 (Ancient Linux)',
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
-				'ARM' => 'ARM (Raspberry Pi 3)',
+			#	'ARM' => 'ARM (Raspberry Pi 3)',
 				'ARMpi4' => 'ARM64 (Pi 4)',
 				'RISCV' => 'RISC-V (VisionFive 2)',
 			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
@@ -1052,7 +1052,7 @@ sub create_project_directory {
 	my $lang=$q->param('lang');
 	if (!$lang) { $lang="Assembly"; }
 	my $mach=$q->param('mach');
-	if (!$mach) { $mach="x86"; }
+	if (!$mach) { $mach="x64"; }
 	if ( $mach eq "x64" ) { $mach="threadripper"; }
 	
 	my @ocompile=$q->param('ocompile');
