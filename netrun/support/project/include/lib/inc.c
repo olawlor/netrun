@@ -15,26 +15,34 @@ int timer_only_dont_print=0;
 
 /* On x86-64, the stack needs to be 16-byte aligned
    for any functions that touch standard I/O.
-   If it isn't, this function warns you about the problem. */
-CDECL void align_stack_warning()
-{
+   If it isn't, this function warns you about the problem.
+   Many chances for false positives if the compiler inlines it!
+*/
 #if defined(__GNUC__) && defined(__x86_64__)
-    long rsp=0;
-    __asm__ ("mov %%rsp,%0":"=r"(rsp));
-    long misaligned=rsp&0xF;
-    if (misaligned==8) puts("CRASH WARNING: Stack pointer ends in 8.  For 16-byte stack alignment you need to push one more (or one less) thing before calling this function.");
-    else if (misaligned) puts("CRASH WARNING: Stack pointer doesn't end in 0 or 8, this is a weird stack misalignment.");
-    else /* misaligned==0, fine */ return;
+__attribute__((noinline)) __attribute__((naked))
+long get_stack_alignment() {
+    __asm__ ("mov %rsp,%rax\n"
+	"and $15,%eax\n"
+	"ret\n");
+}
+#else
+long get_stack_alignment() { return 8; }
 #endif
+
+void align_stack_warning()
+{
+    long misaligned=get_stack_alignment();
+    if (misaligned==8) return; /* correct alignment */
+    else if (misaligned==0) puts("WARNING: Stack pointer ends in 8.  For 16-byte stack alignment you need to push one more (or one less) thing before calling this function.");
+    else puts("WARNING: Stack pointer doesn't end in 0 or 8, this is a weird stack misalignment.");
 }
 
 /* Read one input integer from the user. */
 long read_input(void) {
+	//align_stack_warning(); //<- false positives
 	long ret=0;
 
-	if (timer_only_dont_print) return 0;
-	
-	align_stack_warning();
+	if (timer_only_dont_print) return 0;	
 	
 	if (1!=scanf("%li",&ret)) 
 	{
@@ -84,7 +92,7 @@ int read_string(char *dest_str) {
 	return 1;
 }
 
-/* Print this integer parameter (on the stack) */
+/* Print this integer parameter */
 void print_int(int i) {
 	if (timer_only_dont_print) return;
 	align_stack_warning();
