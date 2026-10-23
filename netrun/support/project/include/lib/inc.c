@@ -454,7 +454,9 @@ void TraceASM_cside(long line,const char *code,struct machine_state *state,long 
 	
 	if (code_next_last != NULL && 0!=strcmp(code_next_last,code)) {
 		// Jumped out from last call
-		printf("TraceASM      %-30s -> jumped out\n", code_next_last);
+		printf("TraceASM %3ld  %-30s -> jumped out\n", line, code_next_last);
+	        code_next_last = code_next;
+		return; //<- don't print anything else
 	}
 	
 	flags[0]=0;
