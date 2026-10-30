@@ -774,6 +774,7 @@ END_ACE
 			'Assembly',			
 #			'Fortran 77',
 			'OpenMP',
+			'Clang',
 			'MPI',
 			'CUDA',
 			'GPGPU',
@@ -848,6 +849,7 @@ END_ACE
 			#	'Alpha',
 				'ARM',
 				'ARMpi4',
+				'ARMgrav',
 				'RISCV',
 			#	'SPARC',
 			#	'MIPS',
@@ -873,6 +875,7 @@ END_ACE
 			#	'Alpha' => 'DEC Alpha (NetBSD)',
 			#	'ARM' => 'ARM (Raspberry Pi 3)',
 				'ARMpi4' => 'ARM64 (Pi 4)',
+				'ARMgrav' => 'ARM64 (AWS Graviton)',
 				'RISCV' => 'RISC-V (VisionFive 2)',
 			#	'SPARC' => 'SPARC (Sun Ultra5 Linux)',
 			#	'MIPS' => 'MIPS (SGI IRIX)',
@@ -908,7 +911,7 @@ END_ACE
 	}
 
 	print "<hr>";
-	print "Version 2024-10-22 Removed Disqus (privacy leak)";
+	print "Version 2026-10-30 Added clang-23 (better at SIMD OpenMP)";
 	print "</div>";
 
 	if ($rel_url eq "runh") { # Homework prep: store correct inputs and outputs
@@ -1212,8 +1215,12 @@ sub create_project_directory {
 			$srcpost .= "}\n" . $gradepost;
 		}
 	}
-	elsif ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "CUDA") {  ############# C++
+	elsif ( $lang eq "C++" or $lang eq "C++0x" or $lang eq "C++14" or $lang eq "C++17" or $lang eq "OpenMP" or $lang eq "Clang" or $lang eq "CUDA") {  ############# C++
 		$compiler='g++ $(CFLAGS)';
+		if ($lang eq "Clang") {
+			$compiler='clang-23 $(CFLAGS)';
+			$linker='clang++-23 $(CFLAGS)';
+		}
 		if ($lang ne "CUDA" ) {
 			push(@cflags,"-fopenmp"); # accept pragma omp by default
 			if (substr($mach,0,3) ne "ARM" and substr($mach,0,4) ne "RISC") {
@@ -1830,13 +1837,21 @@ section .text
 				$srcpost='bx lr'; 		
 			}
 		}
-	} elsif ( $mach eq "ARMpi4" ) {
-	print "FYI-- This is an 1.5GHz Raspberry Pi 4 (ARMv8 in 64-bit mode)<br>\n";
-		$sr_host="137.229.25.24";
+	} elsif ( $mach eq "ARMpi4" || $mach eq "ARMgrav" ) {
+		if ( $mach eq "ARMpi4" ) {
+			print "FYI-- This is a 1.5GHz Raspberry Pi 4 (ARMv8 in 64-bit mode)<br>\n";
+			$sr_host="137.229.25.24";
+		} elsif ($mach eq "ARMgrav") {
+			print "FYI-- This is a 2.5GHz AWS T4g Graviton2 (ARMv8 in 64-bit mode)<br>\n";
+			$sr_host="34.216.180.151";
+		}
 		$sr_port=2983;
 		push(@cflags,"-fPIC");
 		if ( $lang eq "Assembly") {
 			$compiler="as "; 
+			if ($mach ne "ARMpi4") {
+				$compiler="as -march=armv8-a+fp16 -mcpu=neoverse-n1 ";
+			}
 		}
 		$disassembler="objdump -drC";   # -M freaks out this version
 		if ( $lang eq "Assembly") { ################# GNU Assembly
